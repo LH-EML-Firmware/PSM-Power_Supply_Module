@@ -25,6 +25,7 @@
         </logicalFolder>
       </logicalFolder>
       <itemPath>nanomodbus.h</itemPath>
+      <itemPath>modbus_imp.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -64,6 +65,7 @@
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>nanomodbus.c</itemPath>
+      <itemPath>modbus_imp.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
