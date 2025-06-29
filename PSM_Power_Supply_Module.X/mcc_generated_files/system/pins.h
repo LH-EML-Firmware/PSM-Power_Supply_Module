@@ -49,6 +49,139 @@
 #define PULL_UP_ENABLED      1
 #define PULL_UP_DISABLED     0
 
+// get/set IO_RA2 aliases
+#define VPMON_TRIS                 TRISAbits.TRISA2
+#define VPMON_LAT                  LATAbits.LATA2
+#define VPMON_PORT                 PORTAbits.RA2
+#define VPMON_WPU                  WPUAbits.WPUA2
+#define VPMON_OD                   ODCONAbits.ODCA2
+#define VPMON_ANS                  ANSELAbits.ANSA2
+#define VPMON_SetHigh()            do { LATAbits.LATA2 = 1; } while(0)
+#define VPMON_SetLow()             do { LATAbits.LATA2 = 0; } while(0)
+#define VPMON_Toggle()             do { LATAbits.LATA2 = ~LATAbits.LATA2; } while(0)
+#define VPMON_GetValue()           PORTAbits.RA2
+#define VPMON_SetDigitalInput()    do { TRISAbits.TRISA2 = 1; } while(0)
+#define VPMON_SetDigitalOutput()   do { TRISAbits.TRISA2 = 0; } while(0)
+#define VPMON_SetPullup()          do { WPUAbits.WPUA2 = 1; } while(0)
+#define VPMON_ResetPullup()        do { WPUAbits.WPUA2 = 0; } while(0)
+#define VPMON_SetPushPull()        do { ODCONAbits.ODCA2 = 0; } while(0)
+#define VPMON_SetOpenDrain()       do { ODCONAbits.ODCA2 = 1; } while(0)
+#define VPMON_SetAnalogMode()      do { ANSELAbits.ANSA2 = 1; } while(0)
+#define VPMON_SetDigitalMode()     do { ANSELAbits.ANSA2 = 0; } while(0)
+// get/set IO_RA4 aliases
+#define IBMONp_TRIS                 TRISAbits.TRISA4
+#define IBMONp_LAT                  LATAbits.LATA4
+#define IBMONp_PORT                 PORTAbits.RA4
+#define IBMONp_WPU                  WPUAbits.WPUA4
+#define IBMONp_OD                   ODCONAbits.ODCA4
+#define IBMONp_ANS                  ANSELAbits.ANSA4
+#define IBMONp_SetHigh()            do { LATAbits.LATA4 = 1; } while(0)
+#define IBMONp_SetLow()             do { LATAbits.LATA4 = 0; } while(0)
+#define IBMONp_Toggle()             do { LATAbits.LATA4 = ~LATAbits.LATA4; } while(0)
+#define IBMONp_GetValue()           PORTAbits.RA4
+#define IBMONp_SetDigitalInput()    do { TRISAbits.TRISA4 = 1; } while(0)
+#define IBMONp_SetDigitalOutput()   do { TRISAbits.TRISA4 = 0; } while(0)
+#define IBMONp_SetPullup()          do { WPUAbits.WPUA4 = 1; } while(0)
+#define IBMONp_ResetPullup()        do { WPUAbits.WPUA4 = 0; } while(0)
+#define IBMONp_SetPushPull()        do { ODCONAbits.ODCA4 = 0; } while(0)
+#define IBMONp_SetOpenDrain()       do { ODCONAbits.ODCA4 = 1; } while(0)
+#define IBMONp_SetAnalogMode()      do { ANSELAbits.ANSA4 = 1; } while(0)
+#define IBMONp_SetDigitalMode()     do { ANSELAbits.ANSA4 = 0; } while(0)
+// get/set IO_RA5 aliases
+#define IBMONm_TRIS                 TRISAbits.TRISA5
+#define IBMONm_LAT                  LATAbits.LATA5
+#define IBMONm_PORT                 PORTAbits.RA5
+#define IBMONm_WPU                  WPUAbits.WPUA5
+#define IBMONm_OD                   ODCONAbits.ODCA5
+#define IBMONm_ANS                  ANSELAbits.ANSA5
+#define IBMONm_SetHigh()            do { LATAbits.LATA5 = 1; } while(0)
+#define IBMONm_SetLow()             do { LATAbits.LATA5 = 0; } while(0)
+#define IBMONm_Toggle()             do { LATAbits.LATA5 = ~LATAbits.LATA5; } while(0)
+#define IBMONm_GetValue()           PORTAbits.RA5
+#define IBMONm_SetDigitalInput()    do { TRISAbits.TRISA5 = 1; } while(0)
+#define IBMONm_SetDigitalOutput()   do { TRISAbits.TRISA5 = 0; } while(0)
+#define IBMONm_SetPullup()          do { WPUAbits.WPUA5 = 1; } while(0)
+#define IBMONm_ResetPullup()        do { WPUAbits.WPUA5 = 0; } while(0)
+#define IBMONm_SetPushPull()        do { ODCONAbits.ODCA5 = 0; } while(0)
+#define IBMONm_SetOpenDrain()       do { ODCONAbits.ODCA5 = 1; } while(0)
+#define IBMONm_SetAnalogMode()      do { ANSELAbits.ANSA5 = 1; } while(0)
+#define IBMONm_SetDigitalMode()     do { ANSELAbits.ANSA5 = 0; } while(0)
+// get/set IO_RB4 aliases
+#define VBMON_TRIS                 TRISBbits.TRISB4
+#define VBMON_LAT                  LATBbits.LATB4
+#define VBMON_PORT                 PORTBbits.RB4
+#define VBMON_WPU                  WPUBbits.WPUB4
+#define VBMON_OD                   ODCONBbits.ODCB4
+#define VBMON_ANS                  ANSELBbits.ANSB4
+#define VBMON_SetHigh()            do { LATBbits.LATB4 = 1; } while(0)
+#define VBMON_SetLow()             do { LATBbits.LATB4 = 0; } while(0)
+#define VBMON_Toggle()             do { LATBbits.LATB4 = ~LATBbits.LATB4; } while(0)
+#define VBMON_GetValue()           PORTBbits.RB4
+#define VBMON_SetDigitalInput()    do { TRISBbits.TRISB4 = 1; } while(0)
+#define VBMON_SetDigitalOutput()   do { TRISBbits.TRISB4 = 0; } while(0)
+#define VBMON_SetPullup()          do { WPUBbits.WPUB4 = 1; } while(0)
+#define VBMON_ResetPullup()        do { WPUBbits.WPUB4 = 0; } while(0)
+#define VBMON_SetPushPull()        do { ODCONBbits.ODCB4 = 0; } while(0)
+#define VBMON_SetOpenDrain()       do { ODCONBbits.ODCB4 = 1; } while(0)
+#define VBMON_SetAnalogMode()      do { ANSELBbits.ANSB4 = 1; } while(0)
+#define VBMON_SetDigitalMode()     do { ANSELBbits.ANSB4 = 0; } while(0)
+// get/set IO_RB5 aliases
+#define VCMON_TRIS                 TRISBbits.TRISB5
+#define VCMON_LAT                  LATBbits.LATB5
+#define VCMON_PORT                 PORTBbits.RB5
+#define VCMON_WPU                  WPUBbits.WPUB5
+#define VCMON_OD                   ODCONBbits.ODCB5
+#define VCMON_ANS                  ANSELBbits.ANSB5
+#define VCMON_SetHigh()            do { LATBbits.LATB5 = 1; } while(0)
+#define VCMON_SetLow()             do { LATBbits.LATB5 = 0; } while(0)
+#define VCMON_Toggle()             do { LATBbits.LATB5 = ~LATBbits.LATB5; } while(0)
+#define VCMON_GetValue()           PORTBbits.RB5
+#define VCMON_SetDigitalInput()    do { TRISBbits.TRISB5 = 1; } while(0)
+#define VCMON_SetDigitalOutput()   do { TRISBbits.TRISB5 = 0; } while(0)
+#define VCMON_SetPullup()          do { WPUBbits.WPUB5 = 1; } while(0)
+#define VCMON_ResetPullup()        do { WPUBbits.WPUB5 = 0; } while(0)
+#define VCMON_SetPushPull()        do { ODCONBbits.ODCB5 = 0; } while(0)
+#define VCMON_SetOpenDrain()       do { ODCONBbits.ODCB5 = 1; } while(0)
+#define VCMON_SetAnalogMode()      do { ANSELBbits.ANSB5 = 1; } while(0)
+#define VCMON_SetDigitalMode()     do { ANSELBbits.ANSB5 = 0; } while(0)
+// get/set IO_RB6 aliases
+#define ICMON_TRIS                 TRISBbits.TRISB6
+#define ICMON_LAT                  LATBbits.LATB6
+#define ICMON_PORT                 PORTBbits.RB6
+#define ICMON_WPU                  WPUBbits.WPUB6
+#define ICMON_OD                   ODCONBbits.ODCB6
+#define ICMON_ANS                  ANSELBbits.ANSB6
+#define ICMON_SetHigh()            do { LATBbits.LATB6 = 1; } while(0)
+#define ICMON_SetLow()             do { LATBbits.LATB6 = 0; } while(0)
+#define ICMON_Toggle()             do { LATBbits.LATB6 = ~LATBbits.LATB6; } while(0)
+#define ICMON_GetValue()           PORTBbits.RB6
+#define ICMON_SetDigitalInput()    do { TRISBbits.TRISB6 = 1; } while(0)
+#define ICMON_SetDigitalOutput()   do { TRISBbits.TRISB6 = 0; } while(0)
+#define ICMON_SetPullup()          do { WPUBbits.WPUB6 = 1; } while(0)
+#define ICMON_ResetPullup()        do { WPUBbits.WPUB6 = 0; } while(0)
+#define ICMON_SetPushPull()        do { ODCONBbits.ODCB6 = 0; } while(0)
+#define ICMON_SetOpenDrain()       do { ODCONBbits.ODCB6 = 1; } while(0)
+#define ICMON_SetAnalogMode()      do { ANSELBbits.ANSB6 = 1; } while(0)
+#define ICMON_SetDigitalMode()     do { ANSELBbits.ANSB6 = 0; } while(0)
+// get/set IO_RB7 aliases
+#define IPMON_TRIS                 TRISBbits.TRISB7
+#define IPMON_LAT                  LATBbits.LATB7
+#define IPMON_PORT                 PORTBbits.RB7
+#define IPMON_WPU                  WPUBbits.WPUB7
+#define IPMON_OD                   ODCONBbits.ODCB7
+#define IPMON_ANS                  ANSELBbits.ANSB7
+#define IPMON_SetHigh()            do { LATBbits.LATB7 = 1; } while(0)
+#define IPMON_SetLow()             do { LATBbits.LATB7 = 0; } while(0)
+#define IPMON_Toggle()             do { LATBbits.LATB7 = ~LATBbits.LATB7; } while(0)
+#define IPMON_GetValue()           PORTBbits.RB7
+#define IPMON_SetDigitalInput()    do { TRISBbits.TRISB7 = 1; } while(0)
+#define IPMON_SetDigitalOutput()   do { TRISBbits.TRISB7 = 0; } while(0)
+#define IPMON_SetPullup()          do { WPUBbits.WPUB7 = 1; } while(0)
+#define IPMON_ResetPullup()        do { WPUBbits.WPUB7 = 0; } while(0)
+#define IPMON_SetPushPull()        do { ODCONBbits.ODCB7 = 0; } while(0)
+#define IPMON_SetOpenDrain()       do { ODCONBbits.ODCB7 = 1; } while(0)
+#define IPMON_SetAnalogMode()      do { ANSELBbits.ANSB7 = 1; } while(0)
+#define IPMON_SetDigitalMode()     do { ANSELBbits.ANSB7 = 0; } while(0)
 // get/set IO_RC3 aliases
 #define RW_TRIS                 TRISCbits.TRISC3
 #define RW_LAT                  LATCbits.LATC3

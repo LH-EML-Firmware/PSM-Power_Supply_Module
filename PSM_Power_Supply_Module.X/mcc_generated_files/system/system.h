@@ -45,6 +45,7 @@
 #include "../nvm/nvm.h"
 #include "../system/interrupt.h"
 #include "../system/clock.h"
+#include "../adc/adc.h"
 
 /**
  * @ingroup systemdriver

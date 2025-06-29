@@ -20,6 +20,7 @@
 #include "modbus_imp.h"
 #include "nvm_config.h"
 #include "eusart1_utils.h"
+#include <stdbool.h>
 
 int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg) 
 {    
@@ -85,13 +86,57 @@ nmbs_error handle_write_single_coil(uint16_t address, bool coils, uint8_t unit_i
   return NMBS_ERROR_NONE;
 }
 
-nmbs_error handler_read_input_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void *arg) {
+/*nmbs_error handler_read_input_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void *arg) {
     if (address + quantity > REGS_INPUT_ADDR_MAX)
         return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
     uint16_t* server_registers = (uint16_t *)(&(((mod_bus_registers*) arg)->server_input_register));
     for (int i = 0; i < quantity; i++)
         registers_out[i] = server_registers[address + i];
+
+    return NMBS_ERROR_NONE;
+}*/
+
+nmbs_error handler_read_input_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void *arg) {
+    if (address + quantity > REGS_INPUT_ADDR_MAX)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+
+    mod_bus_registers* registers = (mod_bus_registers*)arg;
+    
+    for (uint16_t i = 0; i < quantity; i++) {
+        uint16_t reg_addr = address + i;
+        
+        if (reg_addr == 0) {
+            registers_out[i] = registers->server_input_register.sensor_type;
+        }
+        else if (reg_addr == 1) {
+            registers_out[i] = registers->server_input_register.serial_number;
+        }
+        else if (reg_addr == 2) {
+            registers_out[i] = registers->server_input_register.chrg;
+        }
+        // Panel data registers 3-24
+        else if (reg_addr >= 3 && reg_addr < 25) {
+            uint16_t offset = reg_addr - 3;
+            if (offset < HIST_SIZE) {
+                registers_out[i] = registers->server_input_register.panel_data->voltage.hist[offset];
+            }
+            else if (offset < HIST_SIZE + MAX_SIZE) {
+                registers_out[i] = registers->server_input_register.panel_data->voltage.max;
+            }
+            // Continue for all panel data fields...
+        }
+        // Battery data registers 25-46
+        else if (reg_addr >= 25 && reg_addr < 47) {
+            uint16_t offset = reg_addr - 25;
+            // Similar handling as panel data...
+        }
+        // Consumption data registers 47-68
+        else if (reg_addr >= 47 && reg_addr < 69) {
+            uint16_t offset = reg_addr - 47;
+            // Similar handling as panel data...
+        }
+    }
 
     return NMBS_ERROR_NONE;
 }
@@ -123,12 +168,21 @@ nmbs_error handle_write_single_register(uint16_t address, const uint16_t* regist
 
 void set_holding_regs_to_default(holding_register* regs)
 {
-    regs->addr_slave        = RTU_SERVER_ADDRESS_DEFAULT;
-    regs->baudrate          = RTU_BAUDRATE_DEFAULT;
-    regs->periode           = 100;
-    regs->voltage_chrg_on   = VOLTAGE_CHRG_ON;
-    regs->curr_tail         = CURR_TAIL;
-    regs->beacon            = 0;
+    regs->addr_slave                = RTU_SERVER_ADDRESS_DEFAULT;
+    regs->baudrate                  = RTU_BAUDRATE_DEFAULT;
+    
+    regs->periode                   = 100;
+    regs->voltage_chrg_on           = VOLTAGE_CHRG_ON;
+    regs->curr_tail                 = CURR_TAIL;
+    regs->beacon                    = 0;
+    
+    regs->panel_volt_calib_factor   = DEFAULT_PANEL_VOLT_CALIB_FACTOR;
+    regs->batt_volt_calib_factor    = DEFAULT_BATT_VOLT_CAL_FACTOR;
+    regs->cons_volt_calib_factor    = DEFAULT_CONS_VOLT_CAL_FACTOR;
+    
+    regs->panel_curr_calib_factor   = DEFAULT_PANEL_CURR_CALIB_FACTOR;
+    regs->batt_curr_calib_factor    = DEFAULT_BATT_CURR_CALIB_FACTOR;
+    regs->cons_curr_calib_factor    = DEFAULT_CONS_CURR_CALIB_FACTOR;
 }
 
 void default_values_register(mod_bus_registers* registers)
@@ -141,6 +195,14 @@ void default_values_register(mod_bus_registers* registers)
     registers->server_holding_register.voltage_chrg_on  = VOLTAGE_CHRG_ON;
     registers->server_holding_register.curr_tail        = CURR_TAIL;
     registers->server_holding_register.beacon           = 1;
+    
+    registers->server_holding_register.panel_volt_calib_factor   = DEFAULT_PANEL_VOLT_CALIB_FACTOR;
+    registers->server_holding_register.batt_volt_calib_factor    = DEFAULT_BATT_VOLT_CAL_FACTOR;
+    registers->server_holding_register.cons_volt_calib_factor    = DEFAULT_CONS_VOLT_CAL_FACTOR;
+    
+    registers->server_holding_register.panel_curr_calib_factor   = DEFAULT_PANEL_CURR_CALIB_FACTOR;
+    registers->server_holding_register.batt_curr_calib_factor    = DEFAULT_BATT_CURR_CALIB_FACTOR;
+    registers->server_holding_register.cons_curr_calib_factor    = DEFAULT_CONS_CURR_CALIB_FACTOR;
     
     registers->server_input_register.serial_number      = RTU_SERIAL_NUMBER_DEFAULT;
     registers->server_input_register.sensor_type        = RTU_SENSOR_TYPE_DEFAULT;

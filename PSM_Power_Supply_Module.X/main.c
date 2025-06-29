@@ -2,9 +2,10 @@
 #include <xc.h>
 #include <stdio.h>  // Include the standard I/O library
 #include <string.h> // Include the string library
-#include "nanomodbus.h" // Library to control AD9833 signal generator
-#include "modbus_imp.h" // Library to control AD9833 signal generator
-#include "nvm_config.h" // Library to control AD9833 signal generator
+#include "nanomodbus.h" 
+#include "modbus_imp.h" 
+#include "nvm_config.h" 
+#include "measure.h"
 
 // Modbus Variables
 mod_bus_registers modbus_data;      // Coils, Holding Registers, Input Registers
@@ -12,6 +13,7 @@ holding_register prev_holding_regs; // Store the Holdding Registers´ previous va
 nmbs_t nmbs;                        // Main Server Structure
 nmbs_platform_conf platform_conf;   // Platform Specific Config
 nmbs_callbacks callbacks;           // Structure containing callback functions to be executed upon Modbus commands
+adc_result_t vpanel = 0;
 
 int main(void)
 {
@@ -33,7 +35,7 @@ int main(void)
     // Disable the Peripheral Interrupts 
     //INTERRUPT_PeripheralInterruptDisable(); 
     
-    sensor_data_t   panel_data;  
+    sensor_data_t   panel_data;
     sensor_data_t   battery_data;
     sensor_data_t   cons_data;
     
@@ -81,6 +83,11 @@ int main(void)
         //while(1){}                  // Halt if unable to create modbus server 
     }
       
+    //modbus_data.server_input_register.panel_data->voltage.hist[0] = 999;
+    modbus_data.server_input_register.panel_data->voltage.hist[0] = 999;
+    panel_data.voltage.hist[1] = 888;
+
+    
     while(1)
     {
         err = nmbs_server_poll(&nmbs);
@@ -96,7 +103,8 @@ int main(void)
             // Handle changes in coil registers (perform measurements according to which coil was written))
             if(nmbs_bitfield_read(modbus_data.server_coils.coils, 0) || nmbs_bitfield_read(modbus_data.server_coils.coils, 1))
             {
-                // Meassure panel 
+                // Meassure panel Test
+                modbus_data.server_input_register.panel_data->voltage.hist[0] = get_voltage_measurement(VPMON,modbus_data.server_holding_register.panel_volt_calib_factor);
             }
             if(nmbs_bitfield_read(modbus_data.server_coils.coils, 0) || nmbs_bitfield_read(modbus_data.server_coils.coils, 2))
             {

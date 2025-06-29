@@ -33,8 +33,8 @@ extern "C" {
     
 // ------------------- Modbus Limits -------------------
 #define COILS_ADDR_MAX          5
-#define REGS_INPUT_ADDR_MAX     10
-#define REGS_HOLDING_ADDR_MAX   7           // This must be the amount of holding registers + 1, otherwise modbus support fails
+#define REGS_INPUT_ADDR_MAX     69
+#define REGS_HOLDING_ADDR_MAX   13           // This must be the amount of holding registers + 1, otherwise modbus support fails
 #define MAX_SLAVE_VALUE         255
 #define MIN_SLAVE_VALUE         1
 
@@ -56,19 +56,41 @@ typedef struct  // A single nmbs_bitfield variable can keep 2000 coils
 // Default Values
 #define RTU_SERVER_ADDRESS_DEFAULT  4       // Our RTU address (Slave number 4) - Slaves can be 0 to 255
 #define RTU_BAUDRATE_DEFAULT        9600    // Default Baud Rate for UART
+
 #define VOLTAGE_CHRG_OFF 3375               // Cut-off voltage (13.5 V * 250 = 3375)
 #define VOLTAGE_CHRG_ON 3125                // Re-enable voltage (12.5 V * 250 = 3125)
 #define CURR_TAIL 1000                      // Cut-off current (250 mA * 10 = 2500)
 
+// Ideal values for calibration factors
+
+// Voltage: V_adc = Vin * (R_bottom / (R_top + R_bottom)), so:
+// Vin = (adc * Vref) / 4095 * ((R_top + R_bottom) / R_bottom) = (adc * voltage_calib_factor) / 4095
+#define DEFAULT_PANEL_VOLT_CALIB_FACTOR     23.1f       // Using R17 = 120k, R20 = 20k, voltage_calib_factor = 3.3 * (140k / 20k)
+#define DEFAULT_BATT_VOLT_CAL_FACTOR        15.52f      // Using R24 = 100k, R28 = 27k, voltage_calib_factor = 3.3 * (127k / 27k)
+#define DEFAULT_CONS_VOLT_CAL_FACTOR        15.52f      // Using R39 = 100k, R41 = 27k, voltage_calib_factor = 3.3 * (127k / 27k)
+
+// Current: V_adc = I_load * R_sense * Gain, so:
+// I = (adc * Vref) / (4095 * R_sense * Gain) = (adc * current_calib_factor) / 4095
+#define DEFAULT_PANEL_CURR_CALIB_FACTOR   3.3f   // Using R_sense = 0.1?, Gain = 10, current_calib_factor = 3.3 / (0.1 * 10)
+#define DEFAULT_BATT_CURR_CALIB_FACTOR    1.5f   // Using R_sense = 0.22?, Gain = 10, current_calib_factor = 3.3 / (0.22 * 10)
+#define DEFAULT_CONS_CURR_CALIB_FACTOR    3.3f   // Using R_sense = 0.1?, Gain = 10, current_calib_factor = 3.3 / (0.1 * 10)
+
 typedef struct
 {
-    uint16_t addr_slave;            // 40000 - Holding Register 0 - Slave Num
-    uint16_t baudrate;              // 40001 - Holding Register 1 - COM Baudrate (9600 default))
+    uint16_t addr_slave;                    // 40000 - Holding Register 0  - Slave Num
+    uint16_t baudrate;                      // 40001 - Holding Register 1  - COM Baudrate (9600 default))
     
-    uint16_t periode;               // 40002 - Holding Register 2 - Measuring Periode
-    uint16_t voltage_chrg_on;       // 40003 - Holding Register 3 - Re-enable voltage (12.5 V * 250 = 3125)
-    uint16_t curr_tail;             // 40004 - Holding Register 4 - Cut-off current (250 mA * 10 = 2500)
-    uint16_t beacon;                // 40005 - Holding Register 5 - Beacons ON/OFF
+    uint16_t periode;                       // 40002 - Holding Register 2  - Measuring Periode
+    uint16_t voltage_chrg_on;               // 40003 - Holding Register 3  - Re-enable voltage (12.5 V * 250 = 3125)
+    uint16_t curr_tail;                     // 40004 - Holding Register 4  - Cut-off current (250 mA * 10 = 2500)
+    uint16_t beacon;                        // 40005 - Holding Register 5  - Beacons ON/OFF
+    
+    uint16_t panel_volt_calib_factor;       // 40006 - Holding Register 6  - Panel Voltage Calibration Factor
+    uint16_t batt_volt_calib_factor;        // 40007 - Holding Register 7  - Battery Voltage Calibration Factor
+    uint16_t cons_volt_calib_factor;        // 40008 - Holding Register 8  - Consumption Voltage Calibration Factor
+    uint16_t panel_curr_calib_factor;       // 40009 - Holding Register 9  - Panel Current Calibration Factor
+    uint16_t batt_curr_calib_factor;        // 40010 - Holding Register 10 - Battery Current Calibration Factor
+    uint16_t cons_curr_calib_factor;        // 40011 - Holding Register 11 - Consumption Current Calibration Factor
 }holding_register;
 
 // ---------------------------------------------------------------------------------------------
