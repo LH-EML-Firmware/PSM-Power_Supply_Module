@@ -7,7 +7,7 @@
  * 
  * @brief This file contains the API implementation for the Interrupt Manager driver.
  * 
- * @version Interrupt Manager Driver Version 2.0.6
+ * @version Interrupt Manager Driver Version 2.0.5
 */
 
 /*
@@ -59,25 +59,10 @@ void  INTERRUPT_Initialize (void)
 void __interrupt() INTERRUPT_InterruptManager (void)
 {
     // interrupt handler
-    if(INTCONbits.PEIE == 1)
+    if(PIE0bits.IOCIE == 1 && PIR0bits.IOCIF == 1)
     {
-        if(PIE3bits.TX1IE == 1 && PIR3bits.TX1IF == 1)
-        {
-            EUSART1_TxInterruptHandler();
-        } 
-        else if(PIE3bits.RC1IE == 1 && PIR3bits.RC1IF == 1)
-        {
-            EUSART1_RxInterruptHandler();
-        } 
-        else if(PIE0bits.TMR0IE == 1 && PIR0bits.TMR0IF == 1)
-        {
-            TMR0_ISR();
-        } 
-        else
-        {
-            //Unhandled Interrupt
-        }
-    }      
+        PIN_MANAGER_IOC();
+    }
     else
     {
         //Unhandled Interrupt

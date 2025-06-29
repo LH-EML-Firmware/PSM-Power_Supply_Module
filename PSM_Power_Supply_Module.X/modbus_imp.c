@@ -18,27 +18,28 @@
 #include "mcc_generated_files/system/system.h"
 #include <xc.h>
 #include "modbus_imp.h"
+#include "nvm_config.h"
+#include "eusart1_utils.h"
 
-int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg) {
-    
+int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg) 
+{    
     int32_t charCount = 0;
-    uint8_t c;
-    
-    while(charCount != count)
-    {
-            c = EUSART1_Read();
-            buf[charCount++] = c;
+    uint32_t timeout = 50000; // Adjust as needed
+
+    while (charCount < count) {
+        uint32_t t = 0;
+        while (!EUSART1_IsRxReady()) {
+            if (t++ > timeout) return charCount > 0 ? charCount : NMBS_ERROR_TIMEOUT;
+        }
+        buf[charCount++] = EUSART1_Read();
     }
-//    EUSART1_Write(*buf);
-//    while(!EUSART1_is_tx_done());
+
     return charCount;
 }
 
-
-
 int32_t write_serial(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg)
 { 
-    //TxDeviceEnable();
+    RW_SetHigh();  // Enable TX  // Use for 485 driver
     int32_t number_of_byte_send = 0;
 
     while(number_of_byte_send<count)
@@ -51,7 +52,8 @@ int32_t write_serial(const uint8_t* buf, uint16_t count, int32_t byte_timeout_ms
             number_of_byte_send++;
         }
     }
-    //TxDeviceDisable();
+    while(!EUSART1_IsTxDone());
+    RW_SetLow(); // Disable TX  // Use for 485 driver
     
     return number_of_byte_send;
 }
@@ -84,35 +86,14 @@ nmbs_error handle_write_single_coil(uint16_t address, bool coils, uint8_t unit_i
 }
 
 nmbs_error handler_read_input_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void *arg) {
-  if (address + quantity > REGS_INPUT_ADDR_MAX)
-    return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
+    if (address + quantity > REGS_INPUT_ADDR_MAX)
+        return NMBS_EXCEPTION_ILLEGAL_DATA_ADDRESS;
 
-  // Read our registers values into registers_out
-  uint16_t* server_registers = (uint16_t *)(&(((mod_bus_registers*) arg)->server_input_register));
-  uint16_t* panel_registers = (uint16_t *)((((mod_bus_registers*) arg)->server_input_register.panel_data));
-  uint16_t* bat_registers = (uint16_t *)((((mod_bus_registers*) arg)->server_input_register.battery_data));
-  uint16_t* cons_registers = (uint16_t *)((((mod_bus_registers*) arg)->server_input_register.cons_data));
-
-  for (uint8_t i = 0; i < quantity; i++)
-  {
-      if(address + i >=0 && address + i <PANEL_HIST_VOLT_ADDR)
-      {
+    uint16_t* server_registers = (uint16_t *)(&(((mod_bus_registers*) arg)->server_input_register));
+    for (int i = 0; i < quantity; i++)
         registers_out[i] = server_registers[address + i];
-      }
-      else if(address + i >=PANEL_HIST_VOLT_ADDR && address + i <BAT_HIST_VOLT_ADDR)
-      {
-        registers_out[i] = panel_registers[address + i - PANEL_HIST_VOLT_ADDR];
-      }
-      else if(address + i >=BAT_HIST_VOLT_ADDR && address + i <CONS_HIST_VOLT_ADDR)
-      {
-        registers_out[i] = bat_registers[address + i - BAT_HIST_VOLT_ADDR];
-      }
-      else
-      {
-        registers_out[i] = cons_registers[address + i - CONS_HIST_VOLT_ADDR];
-      }
-  }
-  return NMBS_ERROR_NONE;
+
+    return NMBS_ERROR_NONE;
 }
 
 nmbs_error handler_read_holding_registers(uint16_t address, uint16_t quantity, uint16_t* registers_out, uint8_t unit_id, void *arg) {
@@ -140,20 +121,144 @@ nmbs_error handle_write_single_register(uint16_t address, const uint16_t* regist
   return NMBS_ERROR_NONE;
 }
 
+void set_holding_regs_to_default(holding_register* regs)
+{
+    regs->addr_slave        = RTU_SERVER_ADDRESS_DEFAULT;
+    regs->baudrate          = RTU_BAUDRATE_DEFAULT;
+    regs->periode           = 100;
+    regs->voltage_chrg_on   = VOLTAGE_CHRG_ON;
+    regs->curr_tail         = CURR_TAIL;
+    regs->beacon            = 0;
+}
+
 void default_values_register(mod_bus_registers* registers)
 {
-    registers->server_holding_register.addr_slave    =   RTU_SERVER_ADDRESS_DEFAULT;
-    registers->server_holding_register.baudrate      =   RTU_BAUDRATE_DEFAULT;
+    m_memset(&(registers->server_coils),            0 ,sizeof(registers->server_coils));
+    m_memset(&(registers->server_input_register),   0 ,sizeof(registers->server_input_register));
+    m_memset(&(registers->server_holding_register), 0 ,sizeof(registers->server_holding_register));
+        
+    registers->server_holding_register.periode          = 100;
+    registers->server_holding_register.voltage_chrg_on  = VOLTAGE_CHRG_ON;
+    registers->server_holding_register.curr_tail        = CURR_TAIL;
+    registers->server_holding_register.beacon           = 1;
     
-    m_memset(&(registers->server_coils), 0 ,sizeof(registers->server_coils));
-    m_memset(&(registers->server_input_register), 0 ,sizeof(registers->server_input_register));
-    registers->server_input_register.serial_number      =   RTU_SERIAL_NUMBER_DEFAULT;
-    registers->server_input_register.sensor_type        =   RTU_SENSOR_TYPE_DEFAULT;
-    registers->server_holding_register.periode          =   TMR0_PeriodGet();
-    registers->server_holding_register.curr_tail        =   CURR_TAIL;          // Corriente de corte (250mA * 10 = 2500)
-    registers->server_holding_register.voltage_chrg_on  =   VOLTAGE_CHRG_ON;    // Voltage de reestablecimiento (12.7 V * 250 = 3175)
-    registers->server_holding_register.beacon           =   0;                  // TRUE beacon on, FALSE beacon off
-    registers->server_input_register.chrg               =   1;  
+    registers->server_input_register.serial_number      = RTU_SERIAL_NUMBER_DEFAULT;
+    registers->server_input_register.sensor_type        = RTU_SENSOR_TYPE_DEFAULT;
+    
+    // Slave Number and Baudrate could have been stored in the Nov Volatile Memory
+    // The first time the NVM is written we write NVM_CONFIG_MAGIC in the first address to indicate that the NVM contains usable data.
+    while (NVM_IsBusy());   // Wait until the NVM is ready before reding
+    if(EEPROM_Read(EEPROM_MAGIC_ADDR) != EEPROM_CONFIG_MAGIC)
+    {
+        registers->server_holding_register.addr_slave       = RTU_SERVER_ADDRESS_DEFAULT;
+        registers->server_holding_register.baudrate         = RTU_BAUDRATE_DEFAULT;
+        registers->server_input_register.sensor_type        = RTU_SENSOR_TYPE_DEFAULT;
+        registers->server_input_register.serial_number      = RTU_SERIAL_NUMBER_DEFAULT;
+        
+        // Indicate that the EEPROM NVM Memory has been written at least once from this point on by writing the magic config value into the first address
+        NVM_UnlockKeySet(UNLOCK_KEY); 
+        while (NVM_IsBusy()); 
+        EEPROM_Write(EEPROM_MAGIC_ADDR, EEPROM_CONFIG_MAGIC);
+        
+        // Write default values for holding registers into memory
+        EEPROM_WriteWord(EEPROM_ADDR_SLAVE_ADDR, RTU_SERVER_ADDRESS_DEFAULT);
+        EEPROM_WriteWord(EEPROM_BAUDRATE_ADDR, RTU_BAUDRATE_DEFAULT);
+        EEPROM_WriteWord(EEPROM_PERIODE_ADDR, 100);
+        EEPROM_WriteWord(EEPROM_VOLTAGE_CHRG_ON_ADDR, VOLTAGE_CHRG_ON);
+        EEPROM_WriteWord(EEPROM_CURR_TAIL_ADDR, CURR_TAIL);
+        EEPROM_WriteWord(EEPROM_BEACON_ADDR, 1);
+        
+        // Write default values for input registers into memory
+        EEPROM_WriteWord(SENSOR_TYPE_ADDR, RTU_SENSOR_TYPE_DEFAULT);
+        EEPROM_WriteWord(SERIAL_NUMBER_ADDR, RTU_SERIAL_NUMBER_DEFAULT);
+    }
+    else
+    {
+        // Load Input Register initial values from NVM
+        registers->server_holding_register.addr_slave       = EEPROM_ReadWord(EEPROM_ADDR_SLAVE_ADDR);
+        registers->server_holding_register.baudrate         = EEPROM_ReadWord(EEPROM_BAUDRATE_ADDR);
+        registers->server_holding_register.periode          = EEPROM_ReadWord(EEPROM_PERIODE_ADDR);
+        registers->server_holding_register.voltage_chrg_on  = EEPROM_ReadWord(EEPROM_VOLTAGE_CHRG_ON_ADDR);
+        registers->server_holding_register.curr_tail        = EEPROM_ReadWord(EEPROM_CURR_TAIL_ADDR);
+        registers->server_holding_register.beacon           = EEPROM_ReadWord(EEPROM_BEACON_ADDR);
+        
+        // Apply configurations contained in holding registers
+        EUSART1_SetBaudRate(registers->server_holding_register.baudrate);
+        
+        // Load Input Register initial values from NVM
+        registers->server_input_register.sensor_type      = EEPROM_ReadWord(SENSOR_TYPE_ADDR);
+        registers->server_input_register.serial_number    = EEPROM_ReadWord(SERIAL_NUMBER_ADDR);
+
+    }
+}
+
+void holding_register_change_handler(mod_bus_registers* modbus_data,holding_register* prev_holding_regs, nmbs_t* nmbs) // nmbs_t* nmbs 
+{    
+    // Check for Salve Num (RTU Address) change
+    if(modbus_data->server_holding_register.addr_slave != prev_holding_regs->addr_slave)
+    {
+        prev_holding_regs->addr_slave = modbus_data->server_holding_register.addr_slave;                // Update previous holding register value
+        EEPROM_WriteWord(EEPROM_ADDR_SLAVE_ADDR, modbus_data->server_holding_register.addr_slave);      // Update non volatile memory  
+        nmbs->address_rtu = (uint8_t)modbus_data->server_holding_register.addr_slave;                   // Update modbus server slave address
+    }
+    
+    // Check for baudrate changes 
+    if(modbus_data->server_holding_register.baudrate != prev_holding_regs->baudrate)
+    {
+        if(EUSART1_SetBaudRate(modbus_data->server_holding_register.baudrate))              // Set UART Baudrate to the new value. This returns true on success
+        {
+            prev_holding_regs->baudrate = modbus_data->server_holding_register.baudrate;    // Update shadow copy with the new value
+            EEPROM_WriteWord(EEPROM_BAUDRATE_ADDR, modbus_data->server_holding_register.baudrate);
+        }
+        else
+        {
+            modbus_data->server_holding_register.baudrate = prev_holding_regs->baudrate; // Baudrate invalid, revert to previous
+        }
+    }
+    
+    // Check for changes in measuring periode
+    if(modbus_data->server_holding_register.periode != prev_holding_regs->periode)
+    {
+        prev_holding_regs->periode = modbus_data->server_holding_register.periode;
+        EEPROM_WriteWord(EEPROM_PERIODE_ADDR, modbus_data->server_holding_register.periode);
+    }
+    
+    // Check for changes in reset voltage
+    if(modbus_data->server_holding_register.voltage_chrg_on != prev_holding_regs->voltage_chrg_on)
+    {
+        prev_holding_regs->voltage_chrg_on = modbus_data->server_holding_register.voltage_chrg_on;
+        EEPROM_WriteWord(EEPROM_VOLTAGE_CHRG_ON_ADDR, modbus_data->server_holding_register.voltage_chrg_on);
+    }
+    
+    // Check for changes in tail current
+    if(modbus_data->server_holding_register.curr_tail != prev_holding_regs->curr_tail)
+    {
+        prev_holding_regs->curr_tail = modbus_data->server_holding_register.curr_tail;
+        EEPROM_WriteWord(EEPROM_CURR_TAIL_ADDR, modbus_data->server_holding_register.curr_tail);
+    }
+    
+    // Check for changes in beacon ON/OFF
+    if(modbus_data->server_holding_register.beacon != prev_holding_regs->beacon)
+    {
+        prev_holding_regs->beacon = modbus_data->server_holding_register.beacon;
+                EEPROM_WriteWord(EEPROM_BEACON_ADDR, modbus_data->server_holding_register.beacon);
+    }
+}
+
+void single_16_bit_nvm_write(uint16_t value)
+{
+    /*flash_address_t base = NVM_CONFIG_BASE_ADDR;
+    flash_data_t flash_row[PROGMEM_PAGE_SIZE] = {0};  // Ensure size matches page size (e.g., 32)
+    
+    // Step 1: Read current flash content into flash_row
+    for (uint8_t i = 0; i < PROGMEM_PAGE_SIZE; i++) 
+    {
+        flash_row[i] = FLASH_Read(base + i);
+    }
+    
+    // Step 2: Modify only the changed value
+    flash_row[NVM_ADDR_SLAVE_OFFSET]*/ 
+    
 }
 
 void check_error_modbus(nmbs_error err)

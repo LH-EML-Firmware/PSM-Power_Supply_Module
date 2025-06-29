@@ -44,7 +44,7 @@
     @misradeviation{@required, 21.1} Defining the system frequency using the _XTAL_FREQ macro is required by the XC8 compiler for the built-in delay functions.
 */
 /* cppcheck-suppress misra-c2012-21.1 */
-#define _XTAL_FREQ 1000000U
+#define _XTAL_FREQ 32000000U
 #endif
 
 /**

@@ -31,22 +31,21 @@ extern "C" {
  * For example, register 40001 corresponds to address 0 in a Modbus frame.
  */
     
-#define COILS_ADDR_MAX          5           // Up to 5 Coil Registers, // No Input Status
-#define REGS_INPUT_ADDR_MAX     69          // Up to 69 Input Registers
-#define REGS_HOLDING_ADDR_MAX   6           // Up to 4 Holding Registers
-
-#define MAX_SLAVE_VALUE              255    
-#define MIN_SLAVE_VALUE              1  
+// ------------------- Modbus Limits -------------------
+#define COILS_ADDR_MAX          5
+#define REGS_INPUT_ADDR_MAX     10
+#define REGS_HOLDING_ADDR_MAX   7           // This must be the amount of holding registers + 1, otherwise modbus support fails
+#define MAX_SLAVE_VALUE         255
+#define MIN_SLAVE_VALUE         1
 
 // ------------------------------------------- Coils -------------------------------------------
- /* Coil Address | Function   (used to order history/max/min/mean voltage/current from panel/battery/consumption)
+/* Coil Address | Function   (used to order history/max/min/mean voltage/current from panel/battery/consumption)
  * -------------|---------------------------------------------------------
  * 0            | Sense all measurements (panel, battery, consumption)
  * 1            | Sense only from the solar panel (voltage & current)
  * 2            | Sense only from the battery (voltage & current)
  * 3            | Sense only from the consumption/load (voltage & current)
- * 4            | 
- * 5            | */
+ */
 typedef struct  // A single nmbs_bitfield variable can keep 2000 coils
 {
     nmbs_bitfield coils;
@@ -54,35 +53,24 @@ typedef struct  // A single nmbs_bitfield variable can keep 2000 coils
 // ---------------------------------------------------------------------------------------------
 
 // ------------------------------------- Holding Registers -------------------------------------
-#define RTU_SERVER_ADDRESS_DEFAULT  4       // Our RTU address (Slave number 4) // Slave can be 0 t0 255
-#define RTU_BAUDRATE_DEFAULT        9600
-
-// EEPROM Configuration Flags (determine whether to use default (RAM) values or previously saved (EEPROM) ones.)    
-#define IS_IN_MEMORY_VALUE          0x00    // Use defaults (RAM)
-#define IS_IN_MEMORY_EPP_ADDR       0x7001  // EEPROM address for the flag  
-// In memory addresses for the content that goes into holding registers
-#define SLAVE_EPP_ADDR              0x7002
-#define BAUDRATE_EPP_ADDR           0x7004
-#define PERIODE_EPP_ADDR            0x7006
-#define CURR_TAIL_EPP_ADDR          0x7008
-#define VOLTAGE_CHRG_ON_EPP_ADDR    0x700A
-#define BEACON_EPP_ADDR             0x700C
-
-// Default Values for Holding Registers
-#define VOLTAGE_CHRG_OFF    3375   // Voltage de corte (13.5 V * 250 = 3375)
-#define VOLTAGE_CHRG_ON     3125   // Voltage de reestablecimiento (12.5 V * 250 = 3125)
-#define CURR_TAIL           1000  // Corriente de corte (250mA * 10 = 2500)
+// Default Values
+#define RTU_SERVER_ADDRESS_DEFAULT  4       // Our RTU address (Slave number 4) - Slaves can be 0 to 255
+#define RTU_BAUDRATE_DEFAULT        9600    // Default Baud Rate for UART
+#define VOLTAGE_CHRG_OFF 3375               // Cut-off voltage (13.5 V * 250 = 3375)
+#define VOLTAGE_CHRG_ON 3125                // Re-enable voltage (12.5 V * 250 = 3125)
+#define CURR_TAIL 1000                      // Cut-off current (250 mA * 10 = 2500)
 
 typedef struct
 {
-    uint16_t addr_slave;            // Holding Register 0
-    uint16_t baudrate;              // Holding Register 1
+    uint16_t addr_slave;            // 40000 - Holding Register 0 - Slave Num
+    uint16_t baudrate;              // 40001 - Holding Register 1 - COM Baudrate (9600 default))
     
-    uint16_t periode;               // Holding Register 2
-    uint16_t voltage_chrg_on;       // Holding Register 3
-    uint16_t curr_tail;             // Holding Register 4
-    uint16_t beacon;                // Holding Register 5
+    uint16_t periode;               // 40002 - Holding Register 2 - Measuring Periode
+    uint16_t voltage_chrg_on;       // 40003 - Holding Register 3 - Re-enable voltage (12.5 V * 250 = 3125)
+    uint16_t curr_tail;             // 40004 - Holding Register 4 - Cut-off current (250 mA * 10 = 2500)
+    uint16_t beacon;                // 40005 - Holding Register 5 - Beacons ON/OFF
 }holding_register;
+
 // ---------------------------------------------------------------------------------------------
 
 // -------------------------------------- Input Registers --------------------------------------
@@ -90,64 +78,15 @@ typedef struct
  * The sensor type (In this case defined as code 100 -> Energy Board)
  * The sensor´s/board´s serial number (in this case 1, later to be changed for a defined convention) */
 
-#define SENSOR_TYPE_ADDR        0
-#define SERIAL_NUMBER_ADDR      1       // Input Register 0 
+// Default Values for Input Registers
+#define RTU_SENSOR_TYPE_DEFAULT     700     // Sensor ID = 700, Power Supply Module
+#define RTU_SERIAL_NUMBER_DEFAULT   1       // Apply proper serial number later
 
-#define RTU_SERIAL_NUMBER_DEFAULT   1
-#define RTU_SENSOR_TYPE_DEFAULT     100
-
-// The next register tells whether the battery is charging or not 
-#define CHARGE_ADDR             2       // Input Register 1
-
-/* Then,
-Each of the three sources (panel, battery, and consumption) stores measured voltage and current data in this format:
- * Voltage:                                            Current:
-    - 8 historical values (latest readings)             - 8 historical values (latest readings)
-    - 1 maximum value                                   - 1 maximum value
-    - 1 minimum value                                   - 1 minimum value
-    - 1 mean (average) value                            - 1 mean (average) value
-
-This structure is repeated for both voltage and current measurements. */
-                          
-// Summary per source:       | Quantity  | Voltage | Current |
-                          // |-----------|---------|---------|
-#define HIST_SIZE   8     // | History   |   8     |    8    |
-#define MIN_SIZE    1     // | Max       |   1     |    1    |
-#define MAX_SIZE    1     // | Min       |   1     |    1    |
-#define MED_SIZE    1     // | Mean      |   1     |    1    |
-                          /*  -------------------------------
- Total per source: 22 registers × 3 sources = 66 input registers */
-
-#define PANEL_HIST_VOLT_ADDR    3                                   // Input Registers 3 to 10
-#define PANEL_MAX_VOLT_ADDR     PANEL_HIST_VOLT_ADDR+HIST_SIZE      // Input Register 11
-#define PANEL_MIN_VOLT_ADDR     PANEL_MAX_VOLT_ADDR+MAX_SIZE        // Input Register 12
-#define PANEL_MED_VOLT_ADDR     PANEL_MIN_VOLT_ADDR+MIN_SIZE        // Input Register 13
-
-#define PANEL_HIST_CURR_ADDR    14                                  // Input Register 14 to 21
-#define PANEL_MAX_CURR_ADDR     PANEL_HIST_CURR_ADDR+HIST_SIZE      // Input Register 22
-#define PANEL_MIN_CURR_ADDR     PANEL_MAX_CURR_ADDR+MAX_SIZE        // Input Register 23
-#define PANEL_MED_CURR_ADDR     PANEL_MIN_CURR_ADDR+MIN_SIZE        // Input Register 24
-
-#define BAT_HIST_VOLT_ADDR      25                                  // Input Registers 25 to 32
-#define BAT_MAX_VOLT_ADDR       BAT_HIST_VOLT_ADDR+HIST_SIZE        // Input Register 33
-#define BAT_MIN_VOLT_ADDR       BAT_MAX_VOLT_ADDR+MAX_SIZE          // Input Register 34
-#define BAT_MED_VOLT_ADDR       BAT_MIN_VOLT_ADDR+MIN_SIZE          // Input Register 35
-
-#define BAT_HIST_CURR_ADDR      36                                  // Input Registers 36 to 43
-#define BAT_MAX_CURR_ADDR       BAT_HIST_CURR_ADDR+HIST_SIZE        // Input Register 44
-#define BAT_MIN_CURR_ADDR       BAT_MAX_CURR_ADDR+MAX_SIZE          // Input Register 45
-#define BAT_MED_CURR_ADDR       BAT_MIN_CURR_ADDR+MIN_SIZE          // Input Register 46
-
-
-#define CONS_HIST_VOLT_ADDR      47                                 // Input Registers 47 to 54
-#define CONS_MAX_VOLT_ADDR       CONS_HIST_VOLT_ADDR+HIST_SIZE      // Input Register 55
-#define CONS_MIN_VOLT_ADDR       CONS_MAX_VOLT_ADDR+MAX_SIZE        // Input Register 56
-#define CONS_MED_VOLT_ADDR       CONS_MIN_VOLT_ADDR+MIN_SIZE        // Input Register 57
-
-#define CONS_HIST_CURR_ADDR      58                                 // Input Registers 58 to 65
-#define CONS_MAX_CURR_ADDR       CONS_HIST_CURR_ADDR+HIST_SIZE      // Input Register 66
-#define CONS_MIN_CURR_ADDR       CONS_MAX_CURR_ADDR+MAX_SIZE        // Input Register 67
-#define CONS_MED_CURR_ADDR       CONS_MIN_CURR_ADDR+MIN_SIZE        // Input Register 68
+// Defines and structs for measurement data
+#define HIST_SIZE   8
+#define MIN_SIZE    1
+#define MAX_SIZE    1
+#define MED_SIZE    1
 
 typedef struct
 {
@@ -163,16 +102,17 @@ typedef struct
     measure_data_t current;
 }sensor_data_t;
 
+// Input registers allocation
 typedef struct
 {
-    uint16_t        sensor_type;        // Input Register 0
-    uint16_t        serial_number;      // Input Register 1
-    
-    uint16_t        chrg;               // Input Register 2
+    uint16_t sensor_type;       // 30000 - Input Register 0 - Code for phase/resonance/power sensor
+    uint16_t serial_number;     // 30001 - Input Register 1 - Sensor´s serial number
        
-    sensor_data_t   *panel_data;        // Input Registers 3 to 24
-    sensor_data_t   *battery_data;      // Input Registers 25 to 46
-    sensor_data_t   *cons_data;         // Input Registers 47 to 68
+    uint16_t chrg;              // 30002 - Input Register 2 - Charging Status 1 - CHARGING, 0 - NOT CHARGING))
+       
+    sensor_data_t *panel_data;   // Input Registers 3 to 24
+    sensor_data_t *battery_data; // Input Registers 25 to 46
+    sensor_data_t *cons_data;    // Input Registers 47 to 68
 }input_register;
 // ---------------------------------------------------------------------------------------------
 
@@ -186,8 +126,17 @@ typedef struct
 
 // ----------------------------------- Function prototypes --------------------------------------- 
 
+// Initializes Modbus holding register structures with default values.
+void set_holding_regs_to_default(holding_register* regs);
+
 // Initializes Modbus register structures with default values.
 void default_values_register(mod_bus_registers* registers);
+
+// Handles and updates the registers and the NVM when holding registers are written
+void holding_register_change_handler(mod_bus_registers* registers,holding_register* prev_holding_regs, nmbs_t* nmbs); // nmbs_t* nmbs 
+
+// Writes a single 16 bit value into the NVM without deleting the rest of the row
+void single_16_bit_nvm_write(uint16_t value);
 
 // Handles and processes Modbus error codes (currently commented out).
 void check_error_modbus(nmbs_error err); 

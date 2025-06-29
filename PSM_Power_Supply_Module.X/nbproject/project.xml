@@ -4,7 +4,9 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>PSM_Power_Supply_Module</name>
-            <creation-uuid>dd15dce7-33fe-4083-9fca-90589f499efa</creation-uuid>
+            <name>PSM-RC3</name>
+            <name>SCMATU-Firmware</name>
+            <creation-uuid>892b8ab8-a0fa-46b4-ab56-5d6dae4dbcc5</creation-uuid>
             <make-project-type>0</make-project-type>
             <sourceEncoding>ISO-8859-1</sourceEncoding>
             <make-dep-projects/>
