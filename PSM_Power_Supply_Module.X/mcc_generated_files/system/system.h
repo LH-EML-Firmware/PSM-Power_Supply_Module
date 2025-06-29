@@ -42,9 +42,9 @@
 #include "config_bits.h"
 #include "../system/pins.h"
 #include "../uart/eusart1.h"
+#include "../nvm/nvm.h"
 #include "../system/interrupt.h"
 #include "../system/clock.h"
-#include "../timer/tmr0.h"
 
 /**
  * @ingroup systemdriver

@@ -39,7 +39,7 @@
 void CLOCK_Initialize(void)
 {
     // Set the CLOCK CONTROL module to the options selected in the user interface.
-    OSCCON1 = (2 << _OSCCON1_NDIV_POSN)   // NDIV 4
+    OSCCON1 = (0 << _OSCCON1_NDIV_POSN)   // NDIV 1
         | (6 << _OSCCON1_NOSC_POSN);  // NOSC HFINTOSC
     OSCCON3 = (0 << _OSCCON3_SOSCPWR_POSN)   // SOSCPWR Low power
         | (0 << _OSCCON3_CSWHOLD_POSN);  // CSWHOLD may proceed
@@ -49,7 +49,7 @@ void CLOCK_Initialize(void)
         | (0 << _OSCEN_LFOEN_POSN)   // LFOEN disabled
         | (0 << _OSCEN_SOSCEN_POSN)   // SOSCEN disabled
         | (0 << _OSCEN_ADOEN_POSN);  // ADOEN disabled
-    OSCFRQ = (2 << _OSCFRQ_HFFRQ_POSN);  // HFFRQ 4_MHz
+    OSCFRQ = (6 << _OSCFRQ_HFFRQ_POSN);  // HFFRQ 32_MHz
     OSCTUNE = (0 << _OSCTUNE_HFTUN_POSN);  // HFTUN 0x0
 
 }
