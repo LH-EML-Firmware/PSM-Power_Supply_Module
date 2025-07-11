@@ -101,6 +101,7 @@ typedef enum
     ADC_CHANNEL_ANB5 =  0xd, /**< VCMON: RB5*/ 
     ADC_CHANNEL_ANB6 =  0xe, /**< ICMON: RB6*/ 
     ADC_CHANNEL_ANB7 =  0xf, /**< IPMON: RB7*/ 
+    ADC_CHANNEL_ANC4 =  0x14, /**< ALS: RC4*/ 
     ADC_CHANNEL_ANA0 =  0x0 /**< IO_RA0: ANA0*/ 
 } adc_channel_t;
 

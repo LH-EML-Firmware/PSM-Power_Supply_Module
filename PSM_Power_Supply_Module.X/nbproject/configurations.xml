@@ -21,6 +21,13 @@
           <itemPath>mcc_generated_files/system/config_bits.h</itemPath>
           <itemPath>mcc_generated_files/system/interrupt.h</itemPath>
         </logicalFolder>
+        <logicalFolder name="timer" displayName="timer" projectFiles="true">
+          <itemPath>mcc_generated_files/timer/tmr0.h</itemPath>
+          <itemPath>mcc_generated_files/timer/tmr0_deprecated.h</itemPath>
+          <itemPath>mcc_generated_files/timer/tmr4.h</itemPath>
+          <itemPath>mcc_generated_files/timer/tmr2.h</itemPath>
+          <itemPath>mcc_generated_files/timer/timer_interface.h</itemPath>
+        </logicalFolder>
         <logicalFolder name="uart" displayName="uart" projectFiles="true">
           <itemPath>mcc_generated_files/uart/uart_drv_interface.h</itemPath>
           <itemPath>mcc_generated_files/uart/uart_types.h</itemPath>
@@ -32,6 +39,7 @@
       <itemPath>eusart1_utils.h</itemPath>
       <itemPath>nvm_config.h</itemPath>
       <itemPath>measure.h</itemPath>
+      <itemPath>parameters.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -66,6 +74,13 @@
             <itemPath>mcc_generated_files/system/src/pins.c</itemPath>
             <itemPath>mcc_generated_files/system/src/interrupt.c</itemPath>
             <itemPath>mcc_generated_files/system/src/system.c</itemPath>
+          </logicalFolder>
+        </logicalFolder>
+        <logicalFolder name="timer" displayName="timer" projectFiles="true">
+          <logicalFolder name="src" displayName="src" projectFiles="true">
+            <itemPath>mcc_generated_files/timer/src/tmr0.c</itemPath>
+            <itemPath>mcc_generated_files/timer/src/tmr2.c</itemPath>
+            <itemPath>mcc_generated_files/timer/src/tmr4.c</itemPath>
           </logicalFolder>
         </logicalFolder>
         <logicalFolder name="uart" displayName="uart" projectFiles="true">

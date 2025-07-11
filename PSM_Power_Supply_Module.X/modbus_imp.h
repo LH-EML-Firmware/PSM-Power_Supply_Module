@@ -34,7 +34,8 @@ extern "C" {
 // ------------------- Modbus Limits -------------------
 #define COILS_ADDR_MAX          5
 #define REGS_INPUT_ADDR_MAX     69
-#define REGS_HOLDING_ADDR_MAX   13           // This must be the amount of holding registers + 1, otherwise modbus support fails
+//#define REGS_HOLDING_ADDR_MAX   14           // This must be the amount of holding registers + 1, otherwise modbus support fails
+#define REGS_HOLDING_ADDR_MAX   16   
 #define MAX_SLAVE_VALUE         255
 #define MIN_SLAVE_VALUE         1
 
@@ -84,13 +85,17 @@ typedef struct
     uint16_t voltage_chrg_on;               // 40003 - Holding Register 3  - Re-enable voltage (12.5 V * 250 = 3125)
     uint16_t curr_tail;                     // 40004 - Holding Register 4  - Cut-off current (250 mA * 10 = 2500)
     uint16_t beacon;                        // 40005 - Holding Register 5  - Beacons ON/OFF
+    uint16_t beacon_mode;                   // 40006 - Holding Register 6  - Beacon mode: Auto or manual
     
-    uint16_t panel_volt_calib_factor;       // 40006 - Holding Register 6  - Panel Voltage Calibration Factor
-    uint16_t batt_volt_calib_factor;        // 40007 - Holding Register 7  - Battery Voltage Calibration Factor
-    uint16_t cons_volt_calib_factor;        // 40008 - Holding Register 8  - Consumption Voltage Calibration Factor
-    uint16_t panel_curr_calib_factor;       // 40009 - Holding Register 9  - Panel Current Calibration Factor
-    uint16_t batt_curr_calib_factor;        // 40010 - Holding Register 10 - Battery Current Calibration Factor
-    uint16_t cons_curr_calib_factor;        // 40011 - Holding Register 11 - Consumption Current Calibration Factor
+    uint16_t panel_volt_calib_factor;       // 40007 - Holding Register 7  - Panel Voltage Calibration Factor
+    uint16_t batt_volt_calib_factor;        // 40008 - Holding Register 8  - Battery Voltage Calibration Factor
+    uint16_t cons_volt_calib_factor;        // 40009 - Holding Register 9  - Consumption Voltage Calibration Factor
+    uint16_t panel_curr_calib_factor;       // 40010 - Holding Register 10  - Panel Current Calibration Factor
+    uint16_t batt_curr_calib_factor;        // 40011 - Holding Register 11 - Battery Current Calibration Factor
+    uint16_t cons_curr_calib_factor;        // 40012 - Holding Register 12 - Consumption Current Calibration Factor
+    
+    uint16_t bat_curr_plus; //13
+    uint16_t bat_curr_minus; // 14
 }holding_register;
 
 // ---------------------------------------------------------------------------------------------
@@ -109,6 +114,39 @@ typedef struct
 #define MIN_SIZE    1
 #define MAX_SIZE    1
 #define MED_SIZE    1
+
+// This modbus addresses are required for the handler_read_input_registers function
+#define PANEL_HIST_VOLT_ADDR    3
+#define PANEL_MAX_VOLT_ADDR     PANEL_HIST_VOLT_ADDR+HIST_SIZE 
+#define PANEL_MIN_VOLT_ADDR     PANEL_MAX_VOLT_ADDR+MAX_SIZE
+#define PANEL_MED_VOLT_ADDR     PANEL_MIN_VOLT_ADDR+MIN_SIZE
+
+#define PANEL_HIST_CURR_ADDR    14   
+#define PANEL_MAX_CURR_ADDR     PANEL_HIST_CURR_ADDR+HIST_SIZE
+#define PANEL_MIN_CURR_ADDR     PANEL_MAX_CURR_ADDR+MAX_SIZE
+#define PANEL_MED_CURR_ADDR     PANEL_MIN_CURR_ADDR+MIN_SIZE
+
+
+#define BAT_HIST_VOLT_ADDR      25  
+#define BAT_MAX_VOLT_ADDR       BAT_HIST_VOLT_ADDR+HIST_SIZE
+#define BAT_MIN_VOLT_ADDR       BAT_MAX_VOLT_ADDR+MAX_SIZE
+#define BAT_MED_VOLT_ADDR       BAT_MIN_VOLT_ADDR+MIN_SIZE
+
+#define BAT_HIST_CURR_ADDR      36    
+#define BAT_MAX_CURR_ADDR       BAT_HIST_CURR_ADDR+HIST_SIZE
+#define BAT_MIN_CURR_ADDR       BAT_MAX_CURR_ADDR+MAX_SIZE
+#define BAT_MED_CURR_ADDR       BAT_MIN_CURR_ADDR+MIN_SIZE
+
+
+#define CONS_HIST_VOLT_ADDR      47   
+#define CONS_MAX_VOLT_ADDR       CONS_HIST_VOLT_ADDR+HIST_SIZE
+#define CONS_MIN_VOLT_ADDR       CONS_MAX_VOLT_ADDR+MAX_SIZE
+#define CONS_MED_VOLT_ADDR       CONS_MIN_VOLT_ADDR+MIN_SIZE
+
+#define CONS_HIST_CURR_ADDR      58 
+#define CONS_MAX_CURR_ADDR       CONS_HIST_CURR_ADDR+HIST_SIZE
+#define CONS_MIN_CURR_ADDR       CONS_MAX_CURR_ADDR+MAX_SIZE
+#define CONS_MED_CURR_ADDR       CONS_MIN_CURR_ADDR+MIN_SIZE
 
 typedef struct
 {
@@ -135,6 +173,7 @@ typedef struct
     sensor_data_t *panel_data;   // Input Registers 3 to 24
     sensor_data_t *battery_data; // Input Registers 25 to 46
     sensor_data_t *cons_data;    // Input Registers 47 to 68
+    
 }input_register;
 // ---------------------------------------------------------------------------------------------
 
@@ -156,6 +195,9 @@ void default_values_register(mod_bus_registers* registers);
 
 // Handles and updates the registers and the NVM when holding registers are written
 void holding_register_change_handler(mod_bus_registers* registers,holding_register* prev_holding_regs, nmbs_t* nmbs); // nmbs_t* nmbs 
+
+// Manage beacons according to the beacons value contained in the "beacons" modbus holding register
+void manage_beacons(uint16_t beacons);
 
 // Writes a single 16 bit value into the NVM without deleting the rest of the row
 void single_16_bit_nvm_write(uint16_t value);

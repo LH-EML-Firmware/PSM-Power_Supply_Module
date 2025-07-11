@@ -43,9 +43,12 @@
 #include "../system/pins.h"
 #include "../uart/eusart1.h"
 #include "../nvm/nvm.h"
+#include "../timer/tmr2.h"
+#include "../timer/tmr4.h"
 #include "../system/interrupt.h"
 #include "../system/clock.h"
 #include "../adc/adc.h"
+#include "../timer/tmr0.h"
 
 /**
  * @ingroup systemdriver
