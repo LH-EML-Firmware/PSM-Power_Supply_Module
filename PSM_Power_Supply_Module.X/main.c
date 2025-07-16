@@ -129,8 +129,15 @@ int main(void)
             if (nmbs_bitfield_read(modbus_data.server_coils.coils, 0) || nmbs_bitfield_read(modbus_data.server_coils.coils, 2))
             {
                 // Measure battery voltage and current
-                push_array(battery_data.voltage.hist, get_measurement(VBMON), HIST_SIZE);  // Voltage
-                push_array(battery_data.current.hist, get_measurement(IBMONp), HIST_SIZE); // Current
+                push_array(battery_data.voltage.hist, get_measurement(VBMON), HIST_SIZE); // Voltage
+                if (modbus_data.server_input_register.chrg == 1)
+                {
+                    push_array(battery_data.current.hist, -get_measurement(IBMONm), HIST_SIZE); // Current
+                }
+                else
+                {
+                    push_array(battery_data.current.hist, get_measurement(IBMONp), HIST_SIZE); // Current
+                }
             }
             if (nmbs_bitfield_read(modbus_data.server_coils.coils, 0) || nmbs_bitfield_read(modbus_data.server_coils.coils, 3))
             {
@@ -148,8 +155,15 @@ int main(void)
             push_array(panel_data.voltage.hist, get_measurement(VPMON), HIST_SIZE); // Voltage
             push_array(panel_data.current.hist, get_measurement(IPMON), HIST_SIZE); // Current
             // Battery
-            push_array(battery_data.voltage.hist, get_measurement(VBMON), HIST_SIZE);  // Voltage
-            push_array(battery_data.current.hist, get_measurement(IBMONp), HIST_SIZE); // Current
+            push_array(battery_data.voltage.hist, get_measurement(VBMON), HIST_SIZE); // Voltage
+            if (modbus_data.server_input_register.chrg == 1)
+            {
+                push_array(battery_data.current.hist, -get_measurement(IBMONm), HIST_SIZE); // Current
+            }
+            else
+            {
+                push_array(battery_data.current.hist, get_measurement(IBMONp), HIST_SIZE); // Current
+            }
             // Consumption
             push_array(cons_data.voltage.hist, get_measurement(VCMON), HIST_SIZE); // Voltage
             push_array(cons_data.current.hist, get_measurement(ICMON), HIST_SIZE); // Current

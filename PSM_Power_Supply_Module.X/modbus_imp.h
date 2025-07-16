@@ -52,30 +52,9 @@ extern "C"
     {
         nmbs_bitfield coils;
     } coils;
-// ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
-// ------------------------------------- Holding Registers -------------------------------------
-// Default Values
-#define RTU_SERVER_ADDRESS_DEFAULT 4 // Our RTU address (Slave number 4) - Slaves can be 0 to 255
-#define RTU_BAUDRATE_DEFAULT 9600    // Default Baud Rate for UART
-
-#define VOLTAGE_CHRG_OFF 3375 // Cut-off voltage (13.5 V * 250 = 3375)
-#define VOLTAGE_CHRG_ON 3125  // Re-enable voltage (12.5 V * 250 = 3125)
-#define CURR_TAIL 1000        // Cut-off current (250 mA * 10 = 2500)
-
-// Ideal values for calibration factors
-
-// Voltage: V_adc = Vin * (R_bottom / (R_top + R_bottom)), so:
-// Vin = (adc * Vref) / 4095 * ((R_top + R_bottom) / R_bottom) = (adc * voltage_calib_factor) / 4095
-#define DEFAULT_PANEL_VOLT_CALIB_FACTOR 23.1f // Using R17 = 120k, R20 = 20k, voltage_calib_factor = 3.3 * (140k / 20k)
-#define DEFAULT_BATT_VOLT_CAL_FACTOR 15.52f   // Using R24 = 100k, R28 = 27k, voltage_calib_factor = 3.3 * (127k / 27k)
-#define DEFAULT_CONS_VOLT_CAL_FACTOR 15.52f   // Using R39 = 100k, R41 = 27k, voltage_calib_factor = 3.3 * (127k / 27k)
-
-// Current: V_adc = I_load * R_sense * Gain, so:
-// I = (adc * Vref) / (4095 * R_sense * Gain) = (adc * current_calib_factor) / 4095
-#define DEFAULT_PANEL_CURR_CALIB_FACTOR 3.3f // Using R_sense = 0.1?, Gain = 10, current_calib_factor = 3.3 / (0.1 * 10)
-#define DEFAULT_BATT_CURR_CALIB_FACTOR 1.5f  // Using R_sense = 0.22?, Gain = 10, current_calib_factor = 3.3 / (0.22 * 10)
-#define DEFAULT_CONS_CURR_CALIB_FACTOR 3.3f  // Using R_sense = 0.1?, Gain = 10, current_calib_factor = 3.3 / (0.1 * 10)
+    // ------------------------------------- Holding Registers -------------------------------------
 
     typedef struct
     {
@@ -99,53 +78,12 @@ extern "C"
         uint16_t bat_curr_minus; // 14
     } holding_register;
 
-// ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
-// -------------------------------------- Input Registers --------------------------------------
-/* Input registers contain:
- * The sensor type (In this case defined as code 100 -> Energy Board)
- * The sensor�s/board�s serial number (in this case 1, later to be changed for a defined convention) */
-
-// Default Values for Input Registers
-#define RTU_SENSOR_TYPE_DEFAULT 700 // Sensor ID = 700, Power Supply Module
-#define RTU_SERIAL_NUMBER_DEFAULT 1 // Apply proper serial number later
-
-// Defines and structs for measurement data
-#define HIST_SIZE 8
-#define MIN_SIZE 1
-#define MAX_SIZE 1
-#define MED_SIZE 1
-
-// This modbus addresses are required for the handler_read_input_registers function
-#define PANEL_HIST_VOLT_ADDR 3
-#define PANEL_MAX_VOLT_ADDR PANEL_HIST_VOLT_ADDR + HIST_SIZE
-#define PANEL_MIN_VOLT_ADDR PANEL_MAX_VOLT_ADDR + MAX_SIZE
-#define PANEL_MED_VOLT_ADDR PANEL_MIN_VOLT_ADDR + MIN_SIZE
-
-#define PANEL_HIST_CURR_ADDR 14
-#define PANEL_MAX_CURR_ADDR PANEL_HIST_CURR_ADDR + HIST_SIZE
-#define PANEL_MIN_CURR_ADDR PANEL_MAX_CURR_ADDR + MAX_SIZE
-#define PANEL_MED_CURR_ADDR PANEL_MIN_CURR_ADDR + MIN_SIZE
-
-#define BAT_HIST_VOLT_ADDR 25
-#define BAT_MAX_VOLT_ADDR BAT_HIST_VOLT_ADDR + HIST_SIZE
-#define BAT_MIN_VOLT_ADDR BAT_MAX_VOLT_ADDR + MAX_SIZE
-#define BAT_MED_VOLT_ADDR BAT_MIN_VOLT_ADDR + MIN_SIZE
-
-#define BAT_HIST_CURR_ADDR 36
-#define BAT_MAX_CURR_ADDR BAT_HIST_CURR_ADDR + HIST_SIZE
-#define BAT_MIN_CURR_ADDR BAT_MAX_CURR_ADDR + MAX_SIZE
-#define BAT_MED_CURR_ADDR BAT_MIN_CURR_ADDR + MIN_SIZE
-
-#define CONS_HIST_VOLT_ADDR 47
-#define CONS_MAX_VOLT_ADDR CONS_HIST_VOLT_ADDR + HIST_SIZE
-#define CONS_MIN_VOLT_ADDR CONS_MAX_VOLT_ADDR + MAX_SIZE
-#define CONS_MED_VOLT_ADDR CONS_MIN_VOLT_ADDR + MIN_SIZE
-
-#define CONS_HIST_CURR_ADDR 58
-#define CONS_MAX_CURR_ADDR CONS_HIST_CURR_ADDR + HIST_SIZE
-#define CONS_MIN_CURR_ADDR CONS_MAX_CURR_ADDR + MAX_SIZE
-#define CONS_MED_CURR_ADDR CONS_MIN_CURR_ADDR + MIN_SIZE
+    // -------------------------------------- Input Registers --------------------------------------
+    /* Input registers contain:
+     * The sensor type (In this case defined as code 100 -> Energy Board)
+     * The sensor´s/board´s serial number (in this case 1, later to be changed for a defined convention) */
 
     typedef struct
     {
@@ -165,13 +103,13 @@ extern "C"
     typedef struct
     {
         uint16_t sensor_type;   // 30000 - Input Register 0 - Code for phase/resonance/power sensor
-        uint16_t serial_number; // 30001 - Input Register 1 - Sensor�s serial number
+        uint16_t serial_number; // 30001 - Input Register 1 - Sensor´s serial number
 
         uint16_t chrg; // 30002 - Input Register 2 - Charging Status 1 - CHARGING, 0 - NOT CHARGING))
 
-        sensor_data_t *panel_data;   // Input Registers 3 to 24
-        sensor_data_t *battery_data; // Input Registers 25 to 46
-        sensor_data_t *cons_data;    // Input Registers 47 to 68
+        sensor_data_t *panel_data;   // 3 - 24:  Input Registers [3 - 10] = Hist Volt | 11, 12, 13 = max, min, med Volt |  [14 - 21] = Hist Cur | 22, 23, 24 = max, min, med Cur
+        sensor_data_t *battery_data; // 25 - 46: Input Registers [25 - 32] = Hist Volt | 33, 34, 35 = max, min, med Volt |  [36 - 43] = Hist Cur | 44, 45, 46 = max, min, med Cur
+        sensor_data_t *cons_data;    // 47 - 68: Input Registers [47 - 54] = Hist Volt | 55, 56, 57 = max, min, med Volt |  [58 - 65] = Hist Cur | 66, 67, 68 = max, min, med Cur
 
     } input_register;
     // ---------------------------------------------------------------------------------------------
