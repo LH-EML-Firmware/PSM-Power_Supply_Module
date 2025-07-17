@@ -20,9 +20,10 @@ In order to compile/build this project you will need
 - XC8 v2.46
 - You will need to go to MCC and hit the "generate" button in order to build this project.
 
-## Download Latest Ready to program HEX and ELF files
-![PSM v1.0.0 HEX](add_link)
-![PSM v1.0.0 ELF](add_link)
+## 📥 Download Latest Ready-to-Program Files
+
+[🔗 PSM v1.0.0 ELF](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/download/v1.0.0/PSM_Power_Supply_Module.X.production.elf)  
+[🔗 PSM v1.0.0 HEX](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/download/v1.0.0/PSM_Power_Supply_Module.X.production.hex)
 
 ## Features
 
@@ -75,11 +76,11 @@ All parameters are exposed via Modbus registers to be configured and monitored e
 📎 **Tip**: You can read all values with a single Modbus read of **11 input registers starting at Input Register 3**. 	
 
 - Alternatively you may trigger asynchronous measurements using modbus coils:
-	 Coil 0            | Sense all measurements (panel, battery, consumption)
- 	 Coil 1            | Sense only from the solar panel (voltage & current)
- 	 Coil 2            | Sense only from the battery (voltage & current)
- 	 Coil 3            | Sense only from the consumption/load (voltage & current)
-  These measurements will be stored in the newest value slot in the buffer (hist[0]) 
+    -Coil 0            | Sense all measurements (panel, battery, consumption)
+ 	-Coil 1            | Sense only from the solar panel (voltage & current)
+ 	-Coil 2            | Sense only from the battery (voltage & current)
+ 	-Coil 3            | Sense only from the consumption/load (voltage & current)
+-These measurements will be stored in the newest value slot in the buffer (hist[0]) 
 
 ---
 
