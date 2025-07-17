@@ -19,9 +19,15 @@
 #define EEPROM_CURR_TAIL_ADDR       (EEPROM_START_ADDRESS + 9)      // Holding Register 4
 #define EEPROM_BEACON_ADDR          (EEPROM_START_ADDRESS + 11)     // Holding Register 5
 #define EEPROM_BEACON_MODE_ADDR     (EEPROM_START_ADDRESS + 13)     // Holding Register 6
+#define EEPROM_BEACON_DUTY_ADDR     (EEPROM_START_ADDRESS + 15)     // Holding Register 7
+#define EEPROM_UVP_ADDR             (EEPROM_START_ADDRESS + 17)     // Holding Register 8
+#define EEPROM_UVP_MODE_ADDR        (EEPROM_START_ADDRESS + 19)     // Holding Register 9
+#define EEPROM_CHRG_ADDR            (EEPROM_START_ADDRESS + 21)     // Holding Register 10
+#define EEPROM_CHRG_MODE_ADDR       (EEPROM_START_ADDRESS + 23)     // Holding Register 11
 
-#define SENSOR_TYPE_ADDR            (EEPROM_START_ADDRESS + 15)      // Input Register 0
-#define SERIAL_NUMBER_ADDR          (EEPROM_START_ADDRESS + 17)      // Input Register 1
+#define SENSOR_TYPE_ADDR            (EEPROM_START_ADDRESS + 25)      // Input Register 0
+#define SERIAL_NUMBER_ADDR          (EEPROM_START_ADDRESS + 27)      // Input Register 1
+#define CHRG_STATUS_ADDR            (EEPROM_START_ADDRESS + 29)      // Input Register 2
 
 // Function prototype
 uint16_t EEPROM_ReadWord(uint16_t address);

@@ -1,4 +1,4 @@
-# PSM_Power_Suuply_Module
+# PSM_Power_Supply_Module
 PSM: Power_Supply_Module (Energy V4)
 
 ## Repository Initialization
