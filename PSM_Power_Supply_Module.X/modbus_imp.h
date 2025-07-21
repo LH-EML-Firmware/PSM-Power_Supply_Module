@@ -108,7 +108,7 @@ typedef struct
        
     uint16_t chrg;              // 30002 - Input Register 2 - Charging Status 1 - CHARGING, 0 - NOT CHARGING))
        
-    sensor_data_t *panel_data;   // 3 - 24:  Input Registers [3 - 10] = Hist Volt | 11, 12, 13 = max, min, med Volt  |  [14 - 21] = Hist Cur | 22, 23, 24 = max, min, med Cur
+    sensor_data_t *panel_data;   // 3 - 24:  Input Registers [3 - 10]  = Hist Volt | 11, 12, 13 = max, min, med Volt  |  [14 - 21] = Hist Cur | 22, 23, 24 = max, min, med Cur
     sensor_data_t *battery_data; // 25 - 46: Input Registers [25 - 32] = Hist Volt | 33, 34, 35 = max, min, med Volt |  [36 - 43] = Hist Cur | 44, 45, 46 = max, min, med Cur
     sensor_data_t *cons_data;    // 47 - 68: Input Registers [47 - 54] = Hist Volt | 55, 56, 57 = max, min, med Volt |  [58 - 65] = Hist Cur | 66, 67, 68 = max, min, med Cur
     

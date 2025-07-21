@@ -323,6 +323,9 @@ void holding_register_change_handler(mod_bus_registers* modbus_data,holding_regi
             }
             else if(modbus_data->server_holding_register.beacon_duty_mode == BEACONS_DUTY_ON_OFF)
             {
+                // Stop Timers in order to prevent blinking behavior
+                TMR4_Stop();
+                TMR2_Stop();
                 // Beacons always ON or OFF instead of blinking.
                 if(modbus_data->server_holding_register.beacon == 1)   
                 {
@@ -348,7 +351,10 @@ void holding_register_change_handler(mod_bus_registers* modbus_data,holding_regi
                 manage_beacons(modbus_data->server_holding_register.beacon); // Beacons turn on during 100ms every 1 second.
             }
             else if(modbus_data->server_holding_register.beacon_duty_mode == BEACONS_DUTY_ON_OFF)
-            {
+            { 
+                // Stop Timers in order to prevent blinking behavior
+                TMR4_Stop();
+                TMR2_Stop();
                 // Beacons always ON or OFF instead of blinking.
                 if(modbus_data->server_holding_register.beacon == 1)   
                 {
