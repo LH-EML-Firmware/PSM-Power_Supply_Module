@@ -21,6 +21,7 @@ uint16_t prev_chgr = 0;
 
 // Functions
 void measurement_cycle();
+void beacons_blink(uint16_t beacons);
 
 // Interrupt routines
 void tmr0_interrupt_handler();
@@ -222,17 +223,7 @@ int main(void)
 void tmr0_interrupt_handler()
 {
     periodic_measurement = 1;
-    if(modbus_data.server_holding_register.beacon_mode == BEACONS_MODE_AUTO)
-    {
-        if(is_daylight())
-        {
-            manage_beacons(BEACONS_OFF);
-        }
-        else    // Night time -> Turn on beacons
-        {
-            manage_beacons(BEACONS_ON);
-        }
-    }
+    manage_beacons();
 }
 
 void tmr2_interrupt_handler()
@@ -245,7 +236,7 @@ void tmr4_interrupt_handler()
     PWR_LED_SetHigh();
 }
 
-void manage_beacons(uint16_t beacons)  // Declared and called in modbus_imp, when setting registers to defalut or managing changes in registers.
+void beacons_blink(uint16_t beacons)  // Declared and called in modbus_imp, when setting registers to defalut or managing changes in registers.
 {
     if(beacons == 1)
     {
@@ -259,3 +250,41 @@ void manage_beacons(uint16_t beacons)  // Declared and called in modbus_imp, whe
         TMR2_Stop();
     }
 }
+
+void manage_beacons()
+{
+    if(modbus_data.server_holding_register.beacon_mode == BEACONS_MODE_MANUAL)
+    {
+        if(modbus_data.server_holding_register.beacon_duty_mode == BEACONS_DUTY_BLINK)
+        {
+            beacons_blink(modbus_data.server_holding_register.beacon); // Beacons turn on during 100ms every 1 second.
+        }
+        else if(modbus_data.server_holding_register.beacon_duty_mode == BEACONS_DUTY_ON_OFF)
+        {
+            // Stop Timers in order to prevent blinking behavior
+            TMR4_Stop();
+            TMR2_Stop();
+            // Beacons always ON or OFF instead of blinking.
+            if(modbus_data.server_holding_register.beacon == 1)   
+            {
+                PWR_LED_SetHigh();
+            }
+            else
+            {
+                PWR_LED_SetLow();
+            }
+        }    
+    }
+    else if(modbus_data.server_holding_register.beacon_mode == BEACONS_MODE_AUTO)
+    {
+        if(is_daylight())
+        {
+            beacons_blink(BEACONS_OFF);
+        }
+        else    // Night time -> Turn on beacons
+        {
+            beacons_blink(BEACONS_ON);
+        }
+    }
+}
+

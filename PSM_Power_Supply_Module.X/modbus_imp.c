@@ -155,7 +155,7 @@ void set_holding_regs_to_default(holding_register* regs)
     regs->voltage_chrg_on           = VOLTAGE_CHRG_ON;
     regs->curr_tail                 = CURR_TAIL;
     regs->beacon                    = BEACONS_OFF;
-    regs->beacon_mode               = BEACONS_MODE_MANUAL;
+    regs->beacon_mode               = BEACONS_MODE_AUTO;
     regs->beacon_duty_mode          = BEACONS_DUTY_BLINK;
     regs->uvp                       = 1;
     regs->uvp_mode                  = UVP_MODE_AUTO;
@@ -181,9 +181,7 @@ void default_values_register(mod_bus_registers* registers)
     registers->server_holding_register.voltage_chrg_on              = VOLTAGE_CHRG_ON;
     registers->server_holding_register.curr_tail                    = CURR_TAIL;
     registers->server_holding_register.beacon                       = BEACONS_OFF;
-    registers->server_holding_register.beacon_mode                  = BEACONS_MODE_MANUAL;
-    registers->server_holding_register.beacon                       = BEACONS_OFF;
-    registers->server_holding_register.beacon_mode                  = BEACONS_MODE_MANUAL;
+    registers->server_holding_register.beacon_mode                  = BEACONS_MODE_AUTO;
     registers->server_holding_register.beacon_duty_mode             = BEACONS_DUTY_BLINK;
     registers->server_holding_register.uvp                          = 1;
     registers->server_holding_register.uvp_mode                     = UVP_MODE_AUTO;
@@ -225,7 +223,7 @@ void default_values_register(mod_bus_registers* registers)
         EEPROM_WriteWord(EEPROM_VOLTAGE_CHRG_ON_ADDR, VOLTAGE_CHRG_ON);
         EEPROM_WriteWord(EEPROM_CURR_TAIL_ADDR, CURR_TAIL);
         EEPROM_WriteWord(EEPROM_BEACON_ADDR, BEACONS_OFF);
-        EEPROM_WriteWord(EEPROM_BEACON_MODE_ADDR, BEACONS_MODE_MANUAL);
+        EEPROM_WriteWord(EEPROM_BEACON_MODE_ADDR, BEACONS_MODE_AUTO);
         EEPROM_WriteWord(EEPROM_BEACON_DUTY_ADDR, BEACONS_DUTY_BLINK);
         EEPROM_WriteWord(EEPROM_UVP_ADDR, 1);
         EEPROM_WriteWord(EEPROM_UVP_MODE_ADDR, UVP_MODE_AUTO);
@@ -261,7 +259,6 @@ void default_values_register(mod_bus_registers* registers)
         registers->server_input_register.serial_number      = EEPROM_ReadWord(SERIAL_NUMBER_ADDR);
         registers->server_input_register.chrg               = EEPROM_ReadWord(CHRG_STATUS_ADDR);
     }
-    manage_beacons(registers->server_holding_register.beacon);
 }
 
 void holding_register_change_handler(mod_bus_registers* modbus_data,holding_register* prev_holding_regs, nmbs_t* nmbs) // nmbs_t* nmbs 
@@ -315,28 +312,6 @@ void holding_register_change_handler(mod_bus_registers* modbus_data,holding_regi
     {
         prev_holding_regs->beacon = modbus_data->server_holding_register.beacon;
         EEPROM_WriteWord(EEPROM_BEACON_ADDR, modbus_data->server_holding_register.beacon);
-        if(modbus_data->server_holding_register.beacon_mode == BEACONS_MODE_MANUAL)
-        {
-            if(modbus_data->server_holding_register.beacon_duty_mode == BEACONS_DUTY_BLINK)
-            {
-                manage_beacons(modbus_data->server_holding_register.beacon); // Beacons turn on during 100ms every 1 second.
-            }
-            else if(modbus_data->server_holding_register.beacon_duty_mode == BEACONS_DUTY_ON_OFF)
-            {
-                // Stop Timers in order to prevent blinking behavior
-                TMR4_Stop();
-                TMR2_Stop();
-                // Beacons always ON or OFF instead of blinking.
-                if(modbus_data->server_holding_register.beacon == 1)   
-                {
-                    PWR_LED_SetHigh();
-                }
-                else
-                {
-                    PWR_LED_SetLow();
-                }
-            }    
-        }
     }
     
     // Check for changes in beacon mode (MANUAL/AUTO))
@@ -344,28 +319,6 @@ void holding_register_change_handler(mod_bus_registers* modbus_data,holding_regi
     {
         prev_holding_regs->beacon_mode = modbus_data->server_holding_register.beacon_mode;
         EEPROM_WriteWord(EEPROM_BEACON_MODE_ADDR, modbus_data->server_holding_register.beacon_mode);
-        if(modbus_data->server_holding_register.beacon_mode == BEACONS_MODE_MANUAL)
-        {
-            if(modbus_data->server_holding_register.beacon_duty_mode == BEACONS_DUTY_BLINK)
-            {
-                manage_beacons(modbus_data->server_holding_register.beacon); // Beacons turn on during 100ms every 1 second.
-            }
-            else if(modbus_data->server_holding_register.beacon_duty_mode == BEACONS_DUTY_ON_OFF)
-            { 
-                // Stop Timers in order to prevent blinking behavior
-                TMR4_Stop();
-                TMR2_Stop();
-                // Beacons always ON or OFF instead of blinking.
-                if(modbus_data->server_holding_register.beacon == 1)   
-                {
-                    PWR_LED_SetHigh();
-                }
-                else
-                {
-                    PWR_LED_SetLow();
-                }
-            }
-        }
     }
     
     // Check for changes in beacons duty mode

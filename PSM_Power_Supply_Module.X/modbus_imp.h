@@ -65,18 +65,18 @@ typedef struct
     uint16_t curr_tail;                     // 40004 - Holding Register 4  - Cut-off current (250 mA * 10 = 2500)
     uint16_t beacon;                        // 40005 - Holding Register 5  - Beacons ON/OFF
     uint16_t beacon_mode;                   // 40006 - Holding Register 6  - Beacon mode: Auto (0) or manual (1))
-    uint16_t beacon_duty_mode;              // 40007 - Holding Register 7  - Beacon mode: Auto (0) or manual (1))
+    uint16_t beacon_duty_mode;              // 40007 - Holding Register 7  - Beacon duty: Blink (0) or ON/OFF (1))
     uint16_t uvp;                           // 40008 - Holding Register 8  - UVP: ON (1)/ OFF (0)
     uint16_t uvp_mode;                      // 40009 - Holding Register 9  - UVP mode: Auto (0) or manual (1))
     uint16_t chrg;                          // 40010 - Holding Register 10 - CHRG: ON (1) | OFF (0) - Only usable in manual mode for testing.
     uint16_t chrg_mode;                     // 40011 - Holding Register 11 - CHRG Mode: Auto (0) or manual (1)
     
-    uint16_t panel_volt_calib_factor;       // 40012 - Holding Register 10 - Panel Voltage Calibration Factor
-    uint16_t batt_volt_calib_factor;        // 40013 - Holding Register 11 - Battery Voltage Calibration Factor
-    uint16_t cons_volt_calib_factor;        // 40014 - Holding Register 12 - Consumption Voltage Calibration Factor
-    uint16_t panel_curr_calib_factor;       // 40015 - Holding Register 13 - Panel Current Calibration Factor
-    uint16_t batt_curr_calib_factor;        // 40016 - Holding Register 14 - Battery Current Calibration Factor
-    uint16_t cons_curr_calib_factor;        // 40017 - Holding Register 15 - Consumption Current Calibration Factor
+    uint16_t panel_volt_calib_factor;       // 40012 - Holding Register 12 - Panel Voltage Calibration Factor
+    uint16_t batt_volt_calib_factor;        // 40013 - Holding Register 13 - Battery Voltage Calibration Factor
+    uint16_t cons_volt_calib_factor;        // 40014 - Holding Register 14 - Consumption Voltage Calibration Factor
+    uint16_t panel_curr_calib_factor;       // 40015 - Holding Register 15 - Panel Current Calibration Factor
+    uint16_t batt_curr_calib_factor;        // 40016 - Holding Register 16 - Battery Current Calibration Factor
+    uint16_t cons_curr_calib_factor;        // 40017 - Holding Register 17 - Consumption Current Calibration Factor
 }holding_register;
 
 // ---------------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ void default_values_register(mod_bus_registers* registers);
 void holding_register_change_handler(mod_bus_registers* registers,holding_register* prev_holding_regs, nmbs_t* nmbs); // nmbs_t* nmbs 
 
 // Manage beacons according to the beacons value contained in the "beacons" modbus holding register
-void manage_beacons(uint16_t beacons);
+void manage_beacons();
 
 // Writes a single 16 bit value into the NVM without deleting the rest of the row
 void single_16_bit_nvm_write(uint16_t value);
