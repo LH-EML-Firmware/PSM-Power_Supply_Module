@@ -22,8 +22,8 @@ This firmware was developed for **PIC16F18446**. In order to compile/build this 
 
 ## 📥 Download Latest Ready-to-Program Files
 
-[🔗 PSM v1.0.0 ELF](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/download/v1.0.0/PSM_Power_Supply_Module.X.production.elf)  
-[🔗 PSM v1.0.0 HEX](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/download/v1.0.0/PSM_Power_Supply_Module.X.production.hex)
+[🔗 PSM v1.1.0 ELF](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/download/v1.1.0/PSM_Power_Supply_Module.X.production.elf)  
+[🔗 PSM v1.1.0 HEX](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/download/v1.1.0/PSM_Power_Supply_Module.X.production.hex)
 
 ## Features
 
@@ -34,10 +34,14 @@ This embedded system monitors and controls a battery-backed solar-powered system
 
 It also:
 - Controls the battery charger (automatically or manually)
-- Controls beacon indicators (blinking or fixed)
+- Controls beacon indicators (blinking or fixed, automatic or manual mode)
 - Handles UVP (Under Voltage Protection)
 - Stores historical measurements
-- Calculates metrics using such measurements
+- Allows asynchronous triggering of measurements via Modbus coils
+- Supports configurable measurement period (e.g., every 1s)
+- Calculates and stores min, max, and median metrics for voltage and current
+- Supports secure serial number setting using password-protected mechanism
+- Provides EEPROM persistence for configuration and calibration data
 
 All parameters are exposed via Modbus registers to be configured and monitored externally.
 
@@ -194,9 +198,9 @@ The serial number is stored in a **read-only Input Register (HR1)**, but you can
 | 40010    | HR 9     | `uvp_mode`                  | UVP mode selection                                                          | 0 = Auto (hardware), 1 = Manual|
 | 40011    | HR 10    | `chrg`                      | Charger ON/OFF (manual mode only)                                           | 0 = OFF, 1 = ON                |
 | 40012    | HR 11    | `chrg_mode`                 | Charger mode selection                                                      | 0 = Auto, 1 = Manual           |
-| 40013    | HR 12    | `panel_volt_calib_factor`   | Panel voltage calibration factor                                            | in mV/count                    |
-| 40014    | HR 13    | `batt_volt_calib_factor`    | Battery voltage calibration factor                                          | in mV/count                    |
-| 40015    | HR 14    | `cons_volt_calib_factor`    | Consumption voltage calibration factor                                      | in mV/count                    |
+| 40013    | HR 12    | `panel_volt_calib_factor`   | Panel voltage calibration factor                                            | in mV*100/count                    |
+| 40014    | HR 13    | `batt_volt_calib_factor`    | Battery voltage calibration factor                                          | in mV*100/count                    |
+| 40015    | HR 14    | `cons_volt_calib_factor`    | Consumption voltage calibration factor                                      | in mV*100/count                    |
 | 40016    | HR 15    | `panel_curr_calib_factor`   | Panel current calibration factor                                            | in µA/count                    |
 | 40017    | HR 16    | `batt_curr_calib_factor`    | Battery current calibration factor                                          | in µA/count                    |
 | 40018    | HR 17    | `cons_curr_calib_factor`    | Consumption current calibration factor                                      | in µA/count                    |
