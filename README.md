@@ -15,7 +15,7 @@ git pull origin main
 
 ## IDE Considerations
 
-In order to compile/build this project you will need
+This firmware was developed for **PIC16F18446**. In order to compile/build this project you will need
 - MPLAB v6.20
 - XC8 v2.46
 - You will need to go to MCC and hit the "generate" button in order to build this project.
@@ -37,6 +37,7 @@ It also:
 - Controls beacon indicators (blinking or fixed)
 - Handles UVP (Under Voltage Protection)
 - Stores historical measurements
+- Calculates metrics using such measurements
 
 All parameters are exposed via Modbus registers to be configured and monitored externally.
 
@@ -73,15 +74,15 @@ All parameters are exposed via Modbus registers to be configured and monitored e
 - The newest sample is always in `hist[0]`, and the oldest in `hist[7]`.
 - Every new sample pushes older values down the array.
 
-📎 **Tip**: You can read all values with a single Modbus read of **11 input registers starting at Input Register 3**. 	
+📎 **Tip**: You can read all values with a single Modbus read of **11 input registers starting at Input Register 3** (starting at the HR corresponding hist[0] of the desired measurement). 	
 
+---
 - Alternatively you may trigger asynchronous measurements using modbus coils:
-    -Coil 0            | Sense all measurements (panel, battery, consumption)
- 	-Coil 1            | Sense only from the solar panel (voltage & current)
- 	-Coil 2            | Sense only from the battery (voltage & current)
- 	-Coil 3            | Sense only from the consumption/load (voltage & current)
--These measurements will be stored in the newest value slot in the buffer (hist[0]) 
-
+  - Coil 0            | Sense all measurements (panel, battery, consumption)
+  - Coil 1            | Sense only from the solar panel (voltage & current)
+  - Coil 2            | Sense only from the battery (voltage & current)
+  - Coil 3            | Sense only from the consumption/load (voltage & current)
+- These measurements will be stored in the newest value slot in the buffer (hist[0]) 
 ---
 
 ### 🔦 Beacon Control
@@ -114,6 +115,24 @@ All parameters are exposed via Modbus registers to be configured and monitored e
 
 ---
 
+### Asigning Thresholds for Charger Control
+You can (must) now write **real-world values** directly to configure thresholds like charger re-enable voltage and tail current — no need to calculate ADC units yourself!
+
+| Register        | Name             | Input Format                  | Converted to...       |
+|-----------------|------------------|-------------------------------|------------------------|
+| HR3 (40003)     | `voltage_chrg_on`| Desired voltage in **V × 100** (e.g. 12.5V → 1250) | ADC value              |
+| HR4 (40004)     | `curr_tail`      | Desired current in **mA** (e.g. 100 mA → 100)      | ADC value              |
+
+### Notes:
+- These values are automatically converted to ADC equivalents using the corresponding calibration factors:
+  - `batt_volt_calib_factor` for voltage
+  - `batt_curr_calib_factor` for current
+- Rounding is applied: values are rounded to the nearest ADC integer
+- The ADC value is stored into the same register you wrote to, replacing the user-friendly input
+- These values are saved to EEPROM and used in charger control logic
+
+---
+
 ### 🛡 UVP (Under Voltage Protection)
 
 1. **Choose Mode** via `uvp_mode` (Holding Register 9):
@@ -133,6 +152,29 @@ All parameters are exposed via Modbus registers to be configured and monitored e
   - During **discharging** → ADC value from `IBMON+`
 
 ---
+
+### 🧪 Protected Serial Number Write Operations
+
+The serial number is stored in a **read-only Input Register (HR1)**, but you can assign it via a secure mechanism that uses Holding Registers:
+
+#### Register Allocation
+
+| Register        | Name               | Description                                                                  |
+|-----------------|--------------------|------------------------------------------------------------------------------|
+| HR18 (40018)    | `serial_number_in` | Serial number input (write only if password is accepted)                     |
+| HR19 (40019)    | `sn_password`      | Password input to unlock serial number write (e.g. `0xBEEF`)                 |
+| HR20 (40020)    | `sn_write_status`  | Status of last write: 0 = Idle, 1 = Success, 2 = Failed, 3 = Not Authorized  |
+
+#### How It Works:
+1. Write the correct password to `sn_password` (HR19) → unlocks 1 write for **15 seconds**
+2. Within that time, write your desired serial number to `serial_number_in`
+3. If successful:
+   - Serial number is written into the read-only input register and stored to EEPROM
+   - `sn_write_status` becomes `1` (success)
+4. If the wrong password is submitted or a serial number write operation is attempted without submitting the password, `sn_write_status` becomes:
+  - `2` **wrong password** or 
+  - `3` **unauthorized** accordingly
+5. All related registers are finally cleared (ready to use again).
 
 ---
 
@@ -158,7 +200,9 @@ All parameters are exposed via Modbus registers to be configured and monitored e
 | 40016    | HR 15    | `panel_curr_calib_factor`   | Panel current calibration factor                                            | in µA/count                    |
 | 40017    | HR 16    | `batt_curr_calib_factor`    | Battery current calibration factor                                          | in µA/count                    |
 | 40018    | HR 17    | `cons_curr_calib_factor`    | Consumption current calibration factor                                      | in µA/count                    |
-
+| 40019    | HR 18    | `serial_number_in`          | Input value to write the serial number (if authorized)                      | uint16 (only if password accepted)      |
+| 40020    | HR 19    | `sn_password`               | Serial number write password (triggers write permission)                    | 16-bit password                         |
+| 40021    | HR 20    | `sn_write_status`           | Serial number write attempt status                                          | 0 = Idle, 1 = Success, 2 = Incorrect Password, 3 = Unauthorized |
 ---
 
 ## 📊 Modbus Input Registers (`0x04`, Range: 30001+)

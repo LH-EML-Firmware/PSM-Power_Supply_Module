@@ -30,6 +30,8 @@ void tmr4_interrupt_handler();
 
 // Action enablers
 uint8_t periodic_measurement = 0;
+bool sn_write_enabled = false;
+uint8_t sn_enabled_countdown = 0;
 
 int main(void)
 {
@@ -224,6 +226,16 @@ void tmr0_interrupt_handler()
 {
     periodic_measurement = 1;
     manage_beacons();
+    // Handle serial number write enabler
+    if(sn_write_enabled)
+    {
+        sn_enabled_countdown++;
+        if(sn_enabled_countdown == SN_WRITE_TIMEOUT || (!sn_write_enabled))
+        {
+            sn_enabled_countdown = 0;
+            sn_write_enabled = false;
+        }
+    }
 }
 
 void tmr2_interrupt_handler()

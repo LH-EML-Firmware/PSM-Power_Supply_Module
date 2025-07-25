@@ -32,30 +32,57 @@ extern "C" {
 #define RTU_SERVER_ADDRESS_DEFAULT  4       // Our RTU address (Slave number 4) - Slaves can be 0 to 255
 #define RTU_BAUDRATE_DEFAULT        9600    // Default Baud Rate for UART
     
-// Ideal values for calibration factors
-// V_Resolution = (VADC / 4095) * ((R_top + R_bottom) / R_bottom) | V = V_Resolution * VADC
-#define DEFAULT_PANEL_VOLT_CALIB_FACTOR     564         // For 12 bit ADC - Resolution = 5,64 mV
-#define DEFAULT_BATT_VOLT_CAL_FACTOR        379         // For 12 bit ADC - Resolution = 3,79 mV
-#define DEFAULT_CONS_VOLT_CAL_FACTOR        379         // For 12 bit ADC - Resolution = 3,79 mV
+// ============================ CALIBRATION FACTORS ============================
+// These define the ADC resolution for each measurement source.
+// Units are expressed in:
+//   - Voltage calibration factors: in microvolts per ADC count (µV/count) upscaled x100
+//   - Current calibration factors: in microamps per ADC count (µA/count)
+// These are used to convert raw ADC values into real-world units.
+    
+// V_Resolution = (VADC / 4095) * ((R_top + R_bottom) / R_bottom) | V[mV] = V_Resolution * ADC_Value
+#define DEFAULT_PANEL_VOLT_CALIB_FACTOR     564         // For 12 bit ADC - V_Resolution = 5,64 mV (scaled ×100)
+#define DEFAULT_BATT_VOLT_CAL_FACTOR        379         // For 12 bit ADC - V_Resolution = 3,79 mV (scaled ×100)
+#define DEFAULT_CONS_VOLT_CAL_FACTOR        379         // For 12 bit ADC - V_Resolution = 3,79 mV (scaled ×100)
+// V[Volts] =  ADC_Value * (V_Resolution/1000)
+// V[Volts] =  ADC_Value * (VOLT_CALIB_FACTOR/100000)
 
-// I_Resolution = VADC / (4095 * R_sense * Gain) |  I = VADC * I_Resolution
-#define DEFAULT_PANEL_CURR_CALIB_FACTOR   322           // For 12 bit ADC - Resolution = 379 uA
-#define DEFAULT_BATT_CURR_CALIB_FACTOR    732           // For 12 bit ADC - Resolution = 732 uA
-#define DEFAULT_CONS_CURR_CALIB_FACTOR    732           // For 12 bit ADC - Resolution = 732 uA
+// I_Resolution = VADC / (4095 * R_sense * Gain) |  I[uA] = I_Resolution * ADC_Value
+#define DEFAULT_PANEL_CURR_CALIB_FACTOR     322           // For 12 bit ADC - I_Resolution = 322 uA
+#define DEFAULT_BATT_CURR_CALIB_FACTOR      732           // For 12 bit ADC - I_Resolution = 732 uA
+#define DEFAULT_CONS_CURR_CALIB_FACTOR      732           // For 12 bit ADC - I_Resolution = 732 uA
+// I[mA] =  ADC_Value * (I_Resolution/1000)  
+// I[mA] =  ADC_Value * (CURR_CALIB_FACTOR/1000)
 
-// === THRESHOLD VALUES IN REAL UNITS ===
-#define VOLTAGE_CHRG_OFF_mV  1350000        // upscaled 13.5 V
-#define VOLTAGE_CHRG_ON_mV   1250000        // upscaled 12.5 V
-#define CURR_TAIL_uA         100000         // upscaled 100 mA
+// ==== REAL MAGNITUDE UNIT - UPSCALED - THRESHOLD VALUES ====
+// You may set the threshold values here (upscale them as indicated). The ADC equivalents of these values will be calculated automatically
+#define UPSCALED_VOLTAGE_CHRG_OFF           1350000        // 13.5 V upscaled (desired voltage[V] * 100000)
+#define UPSCALED_VOLTAGE_CHRG_ON            1250000        // 12.5 V upscaled (desired voltage[V] * 100000)
+#define UPSCALED_CURR_TAIL                  100000         // 100 mA upscaled (desired current[mA] * 1000)
     
-//#define VOLTAGE_CHRG_OFF 3375               // Cut-off voltage (13.5 V / 3.79 mV = 3563)
-//#define VOLTAGE_CHRG_ON 3298                // Re-enable voltage (12.5 V / 3.79 mV = 3298)
-//#define CURR_TAIL 137                       // Cut-off current (100 mA / 732 uA = 137)
+// ==== Auto-calculated 12 bit ADC representations for the Threshold Values ====
+// These are the ones used to compare with ADC measurements in order to take the corresponding action 
+
+// * Instead of these:
+//#define VOLTAGE_CHRG_OFF        ((uint16_t)(UPSCALED_VOLTAGE_CHRG_OFF / DEFAULT_BATT_VOLT_CAL_FACTOR))      // Cut-off voltage (13.5 V / 3.79 mV = 3562)
+//#define VOLTAGE_CHRG_ON         ((uint16_t)(UPSCALED_VOLTAGE_CHRG_ON  / DEFAULT_BATT_VOLT_CAL_FACTOR))      // Re-enable voltage (12.5 V / 3.79 mV = 3298)
+//#define CURR_TAIL               ((uint16_t)(UPSCALED_CURR_TAIL / DEFAULT_BATT_CURR_CALIB_FACTOR))  
+
+// * we use these:
+#define VOLTAGE_CHRG_OFF  ((uint16_t)((UPSCALED_VOLTAGE_CHRG_OFF + (DEFAULT_BATT_VOLT_CAL_FACTOR / 2)) / DEFAULT_BATT_VOLT_CAL_FACTOR))  // Cut-off voltage (13.5 V / 3.79 mV ? 3562)
+#define VOLTAGE_CHRG_ON   ((uint16_t)((UPSCALED_VOLTAGE_CHRG_ON  + (DEFAULT_BATT_VOLT_CAL_FACTOR / 2)) / DEFAULT_BATT_VOLT_CAL_FACTOR))  // Re-enable voltage (12.5 V / 3.79 mV ? 3298)         
+#define CURR_TAIL  ((uint16_t)((UPSCALED_CURR_TAIL + (DEFAULT_BATT_CURR_CALIB_FACTOR / 2)) / DEFAULT_BATT_CURR_CALIB_FACTOR)) // Cut-off current (100 mA / 732 uA ? 137)
+
+// * so that the result is rounded up when the decimal part is 0.5 or higher => rounded_result = (numerator + denominator / 2) / denominator;
+// =============================================================================
     
-#define VOLTAGE_CHRG_OFF        ((uint16_t)(VOLTAGE_CHRG_OFF_mV / DEFAULT_BATT_VOLT_CAL_FACTOR))      // Cut-off voltage (13.5 V / 3.79 mV = 3563)
-#define VOLTAGE_CHRG_ON         ((uint16_t)(VOLTAGE_CHRG_ON_mV  / DEFAULT_BATT_VOLT_CAL_FACTOR))      // Re-enable voltage (12.5 V / 3.79 mV = 3298)
-#define CURR_TAIL               ((uint16_t)(CURR_TAIL_uA / DEFAULT_BATT_CURR_CALIB_FACTOR))           // Cut-off current (100 mA / 732 uA = 137)
-    
+// Holding registers for serial number write operations     
+#define SN_PASSWORD_CORRECT         8336    // This value must be written into holding register 19 in order to enable a serial number write.
+#define SN_WRITE_TIMEOUT            15      // Duration (in seconds) for which the serial number write operation remains enabled after correct password entry
+                                            // Keep in mind, this will control a counter inside the TMR0 interrupt so if the interrupt period changes, so will this duration
+#define SNW_STATUS_IDLE             0 
+#define SNW_STATUS_SUCCESS          1 
+#define SNW_STATUS_WRONG_PASS       2 
+#define SNW_STATUS_NOT_AUTHORIZED   3 
 // -----------------------------------------------------------------------------------------------------------------------
     
 // ------------------------------------- Default Values for Modbus Input Registers ---------------------------------------

@@ -23,6 +23,8 @@
 #include "nvm_config.h"
 #include "eusart1_utils.h"
 
+float upscaled_von = 0.0;
+float aux_result = 0.0;
 
 int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg) 
 {    
@@ -166,6 +168,10 @@ void set_holding_regs_to_default(holding_register* regs)
     regs->batt_volt_calib_factor    = DEFAULT_BATT_VOLT_CAL_FACTOR;
     regs->cons_volt_calib_factor    = DEFAULT_CONS_VOLT_CAL_FACTOR;
     
+    regs->serial_number_in          = 0;
+    regs->sn_password               = 0;
+    regs->sn_write_status           = SNW_STATUS_IDLE;
+    
     regs->panel_curr_calib_factor   = DEFAULT_PANEL_CURR_CALIB_FACTOR;
     regs->batt_curr_calib_factor    = DEFAULT_BATT_CURR_CALIB_FACTOR;
     regs->cons_curr_calib_factor    = DEFAULT_CONS_CURR_CALIB_FACTOR;
@@ -191,6 +197,10 @@ void default_values_register(mod_bus_registers* registers)
     registers->server_holding_register.panel_volt_calib_factor      = DEFAULT_PANEL_VOLT_CALIB_FACTOR;
     registers->server_holding_register.batt_volt_calib_factor       = DEFAULT_BATT_VOLT_CAL_FACTOR;
     registers->server_holding_register.cons_volt_calib_factor       = DEFAULT_CONS_VOLT_CAL_FACTOR;
+    
+    registers->server_holding_register.serial_number_in             = 0;
+    registers->server_holding_register.sn_password                  = 0;
+    registers->server_holding_register.sn_write_status              = SNW_STATUS_IDLE;
     
     registers->server_holding_register.panel_curr_calib_factor      = DEFAULT_PANEL_CURR_CALIB_FACTOR;
     registers->server_holding_register.batt_curr_calib_factor       = DEFAULT_BATT_CURR_CALIB_FACTOR;
@@ -295,7 +305,11 @@ void holding_register_change_handler(mod_bus_registers* modbus_data,holding_regi
     
     // Check for changes in reset voltage
     if(modbus_data->server_holding_register.voltage_chrg_on != prev_holding_regs->voltage_chrg_on)
-    {
+    { 
+        // The desired Re-enable Voltage will be inputed in Voltsx100 (example for 12.5V write 1250), then converted to it´s ADC equivalent and re-written into the register
+        modbus_data->server_holding_register.voltage_chrg_on = 
+        (uint16_t)((modbus_data->server_holding_register.voltage_chrg_on * 1000UL + modbus_data->server_holding_register.batt_volt_calib_factor / 2) /
+                   modbus_data->server_holding_register.batt_volt_calib_factor);
         prev_holding_regs->voltage_chrg_on = modbus_data->server_holding_register.voltage_chrg_on;
         EEPROM_WriteWord(EEPROM_VOLTAGE_CHRG_ON_ADDR, modbus_data->server_holding_register.voltage_chrg_on);
     }
@@ -303,6 +317,10 @@ void holding_register_change_handler(mod_bus_registers* modbus_data,holding_regi
     // Check for changes in tail current
     if(modbus_data->server_holding_register.curr_tail != prev_holding_regs->curr_tail)
     {
+        // The desired Tail Current will be inputed in mA, then converted to it´s ADC equivalent and re-written into the register
+        modbus_data->server_holding_register.curr_tail = 
+        (uint16_t)((modbus_data->server_holding_register.curr_tail * 1000UL + modbus_data->server_holding_register.batt_curr_calib_factor / 2) /
+                   modbus_data->server_holding_register.batt_curr_calib_factor);
         prev_holding_regs->curr_tail = modbus_data->server_holding_register.curr_tail;
         EEPROM_WriteWord(EEPROM_CURR_TAIL_ADDR, modbus_data->server_holding_register.curr_tail);
     }
@@ -349,13 +367,44 @@ void holding_register_change_handler(mod_bus_registers* modbus_data,holding_regi
         EEPROM_WriteWord(EEPROM_CHRG_ADDR, modbus_data->server_holding_register.chrg);
     }
     
-    // Check for changes in uvp mode
-    if(modbus_data->server_holding_register.chrg_mode != prev_holding_regs->chrg_mode)
+    // Check whether the correct password has ben submitted in orde to enable a serial number write operation
+    if(modbus_data->server_holding_register.sn_password != prev_holding_regs->sn_password)
     {
-        prev_holding_regs->chrg_mode = modbus_data->server_holding_register.chrg_mode;
-        EEPROM_WriteWord(EEPROM_CHRG_MODE_ADDR, modbus_data->server_holding_register.chrg_mode);
+        //prev_holding_regs->chrg_mode = modbus_data->server_holding_register.chrg_mode;
+        //EEPROM_WriteWord(EEPROM_CHRG_MODE_ADDR, modbus_data->server_holding_register.chrg_mode);
+        if(!sn_write_enabled)
+        {
+            if(modbus_data->server_holding_register.sn_password == SN_PASSWORD_CORRECT)
+            {
+                sn_write_enabled = true;
+            }
+            else
+            {
+                modbus_data->server_holding_register.sn_write_status = SNW_STATUS_WRONG_PASS;
+                sn_write_enabled = false;
+            }
+        }
+        modbus_data->server_holding_register.sn_password = 0;
+        prev_holding_regs->sn_password = 0;
     }
     
+    // Check whether a serial number was write was attempted and handle it
+    if(modbus_data->server_holding_register.serial_number_in != prev_holding_regs->serial_number_in)
+    {
+        if((!sn_write_enabled) && (modbus_data->server_holding_register.sn_write_status != SNW_STATUS_WRONG_PASS))
+        {
+            modbus_data->server_holding_register.sn_write_status = SNW_STATUS_NOT_AUTHORIZED;
+        }
+        if(sn_write_enabled)
+        {
+            modbus_data->server_input_register.serial_number = modbus_data->server_holding_register.serial_number_in;
+            modbus_data->server_holding_register.sn_write_status = SNW_STATUS_SUCCESS;
+            sn_write_enabled = false;
+            EEPROM_WriteWord(SERIAL_NUMBER_ADDR, modbus_data->server_input_register.serial_number);
+        }
+        modbus_data->server_holding_register.serial_number_in = 0;
+        prev_holding_regs->serial_number_in = 0;
+    }
 }
 
 void check_error_modbus(nmbs_error err)
