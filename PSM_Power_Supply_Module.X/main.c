@@ -195,12 +195,12 @@ int main(void)
             // Update charging status
             if (modbus_data.server_input_register.battery_data->voltage.med > VOLTAGE_CHRG_OFF) // Once the battery this voltage:
             {
-                if(battery_data.current.med > CURR_TAIL)
+                if((-battery_data.current.med) < CURR_TAIL)
                 {
                     modbus_data.server_input_register.chrg = 0; // Turn off the charger if the mean battery current exceeds the tail current.
                 }                                               // Tail Current : Lowest charging current measured when a battery is nearing full charge.
             }
-            else if (modbus_data.server_input_register.battery_data->voltage.med < VOLTAGE_CHRG_ON)
+            if (modbus_data.server_input_register.battery_data->voltage.med < VOLTAGE_CHRG_ON)
             {
                 modbus_data.server_input_register.chrg = 1; // If the battery has dropped under this VOLTAGE_CHRG_ON, turn on the charger.
             }

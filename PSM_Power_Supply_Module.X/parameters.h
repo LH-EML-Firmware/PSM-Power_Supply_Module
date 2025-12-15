@@ -86,7 +86,7 @@ extern "C" {
 // -----------------------------------------------------------------------------------------------------------------------
     
 // ------------------------------------- Default Values for Modbus Input Registers ---------------------------------------
-#define RTU_SENSOR_TYPE_DEFAULT     700     // Sensor ID = 700, Power Supply Module
+#define RTU_SENSOR_TYPE_DEFAULT     101     // Sensor ID = 101, Power Supply Module
 #define RTU_SERIAL_NUMBER_DEFAULT   1       // Apply proper serial number later 
 #define RTU_CHRG_STATUS_DEFAULT     0       // Initially, charger is off.    
 // -----------------------------------------------------------------------------------------------------------------------

@@ -29,7 +29,7 @@ float aux_result = 0.0;
 int32_t read_serial(uint8_t* buf, uint16_t count, int32_t byte_timeout_ms, void* arg) 
 {    
     int32_t charCount = 0;
-    uint32_t timeout = 50000; // Adjust as needed
+    uint32_t timeout = 500; // Adjust as needed
 
     while (charCount < count) {
         uint32_t t = 0;
@@ -357,14 +357,29 @@ void holding_register_change_handler(mod_bus_registers* modbus_data,holding_regi
     if(modbus_data->server_holding_register.uvp_mode != prev_holding_regs->uvp_mode)
     {
         prev_holding_regs->uvp_mode = modbus_data->server_holding_register.uvp_mode;
+        if(modbus_data->server_holding_register.uvp_mode)
+        {
+            UVP_SetHigh();
+        }
+        else 
+        {
+            UVP_SetLow();
+        }
         EEPROM_WriteWord(EEPROM_UVP_MODE_ADDR, modbus_data->server_holding_register.uvp_mode);
     }
     
-    // Check for changes in uvp
+    // Check for changes in chr
     if(modbus_data->server_holding_register.chrg != prev_holding_regs->chrg)
     {
         prev_holding_regs->chrg = modbus_data->server_holding_register.chrg;
         EEPROM_WriteWord(EEPROM_CHRG_ADDR, modbus_data->server_holding_register.chrg);
+    }
+    
+    // Check for changes in chrg_mode
+    if(modbus_data->server_holding_register.chrg_mode != prev_holding_regs->chrg_mode)
+    {
+        prev_holding_regs->chrg_mode = modbus_data->server_holding_register.chrg_mode;
+        EEPROM_WriteWord(EEPROM_CHRG_MODE_ADDR, modbus_data->server_holding_register.chrg_mode);
     }
     
     // Check whether the correct password has ben submitted in orde to enable a serial number write operation
