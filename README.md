@@ -22,8 +22,8 @@ This firmware was developed for **PIC16F18446**. In order to compile/build this 
 
 ## 📥 Download Latest Ready-to-Program Files
 
-[🔗 PSM v1.1.0 ELF](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/download/v1.1.0/PSM_Power_Supply_Module.X.production.elf)  
-[🔗 PSM v1.1.0 HEX](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/download/v1.1.0/PSM_Power_Supply_Module.X.production.hex)
+[🔗 Latest PSM HEX](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/latest/download/PSM_Power_Supply_Module.X.production.hex)  
+[🔗 Latest PSM ELF](https://github.com/LH-EML-Firmware/PSM-Power_Supply_Module/releases/latest/download/PSM_Power_Supply_Module.X.production.elf)
 
 ## Features
 
